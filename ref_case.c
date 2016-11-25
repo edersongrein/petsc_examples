@@ -33,7 +33,8 @@ int main(int argc, char **argv) {
 	double dt_max = 10.0;
 	double final_time = 10.0;
 
-	PetscInt nx = 100000;
+	PetscInt nx = 10000;
+	PetscOptionsGetInt(NULL, NULL, "-nx", &nx, NULL);
 
 	double temperature_presc[] = { 2.0, 50.0, 55.0, 60.0 };
 

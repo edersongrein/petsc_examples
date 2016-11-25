@@ -61,7 +61,9 @@ int main(int argc, char **argv)
 	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	Create distributed array (DMDA) to manage parallel grid and vectors
 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, -11, 1, 1, NULL, &da); CHKERRQ(ierr);
+	PetscInt nx = 11;
+	PetscOptionsGetInt(NULL, NULL, "-nx", &nx, NULL);
+	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, -nx, 1, 1, NULL, &da); CHKERRQ(ierr);
 
 	/*  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	Extract global vectors from DMDA;
@@ -91,7 +93,7 @@ int main(int argc, char **argv)
 
 	ierr = TSSetDM(ts, da); CHKERRQ(ierr); /* Use TSGetDM() to access. Setting here allows easy use of geometric multigrid. */
 
-	ftime = 0.02;
+	ftime = 0.1;
 	ierr = TSSetDuration(ts, maxsteps, ftime); CHKERRQ(ierr);
 	ierr = TSSetExactFinalTime(ts, TS_EXACTFINALTIME_STEPOVER); CHKERRQ(ierr);
 
@@ -208,9 +210,6 @@ static PetscErrorCode FormIFunction(TS ts, PetscReal ftime, Vec U, Vec Udot, Vec
 	ierr = DMDAVecRestoreArrayRead(da, localU, &u); CHKERRQ(ierr);
 	ierr = DMDAVecRestoreArrayRead(da, Udot, &udot); CHKERRQ(ierr);
 	ierr = DMDAVecRestoreArray(da, F, &f); CHKERRQ(ierr);
-
-	VecView(F, PETSC_VIEWER_STDOUT_WORLD);
-
 	ierr = DMRestoreLocalVector(da, &localU); CHKERRQ(ierr);
 	PetscFunctionReturn(0);
 }
