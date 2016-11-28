@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 	double dt_max = 10.0;
 	double final_time = 0.01;
 
-	PetscInt nx = 11;
+	PetscInt nx = 5;
 	PetscOptionsGetInt(NULL, NULL, "-nx", &nx, NULL);
 
 	double temperature_presc[] = { 2.0, 50.0, 55.0, 60.0 };
@@ -56,41 +56,44 @@ int main(int argc, char **argv) {
 	TS ts;
 	TSCreate(PETSC_COMM_WORLD, &ts);
 
-	// Single pipe
-	DM domain;
-	PetscInt dof = 1;
-	PetscInt stencil_width = 1;
-	DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, nx, dof, stencil_width, NULL, &domain);
-
-	// Multiple pipes
-	//DM* pipes;
-	//pipes = (DM*)malloc(npipes * sizeof(DM));
-
-	//DM dm_redundant;
-	//DMCreate(PETSC_COMM_WORLD, &dm_redundant);
-	//DMSetType(dm_redundant, DMREDUNDANT);
-	//RedundantSetSize(dm_redundant, 0, 1);
-	//DMSetUp(dm_redundant);
-
+	//// Single pipe case
 	//DM domain;
-	//DMCompositeCreate(PETSC_COMM_WORLD, &domain);
-
 	//PetscInt dof = 1;
 	//PetscInt stencil_width = 1;
-	//for (int i = 1; i < npipes; i++) {
-	//	DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, nx, dof, stencil_width, NULL, &pipes[i]);
-	//	DMCompositeAddDM(domain, pipes[i]);
-	//}
+	//DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, nx, dof, stencil_width, NULL, &domain);
 
-	//DMCompositeAddDM(domain, dm_redundant);
+	 //Multiple pipes
+	DM* pipes;
 
-	//CompositeSetCoupling(domain);
+	DM dm_redundant;
+	DMCreate(PETSC_COMM_WORLD, &dm_redundant);
+	DMSetType(dm_redundant, DMREDUNDANT);
+	RedundantSetSize(dm_redundant, 0, 1);
+	DMSetUp(dm_redundant);
+
+	DM domain;
+	DMCompositeCreate(PETSC_COMM_WORLD, &domain);
+
+	PetscInt dof = 1;
+	PetscInt stencil_width = 1;
+	PetscInt npipes = 4;
+	for (int i = 0; i < PIPES_SIZE; i++) {
+		DM pipe;
+		DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, nx, dof, stencil_width, NULL, &pipe);
+		DMCompositeAddDM(domain, pipe);
+	}
+
+	DMCompositeAddDM(domain, dm_redundant);
+
+	DMCompositeSetCoupling(domain, FormCoupleLocations);
 
 	TSSetDM(ts, domain);
 
 	Vec F;
 	DMCreateGlobalVector(domain, &F);
-	TSSetIFunction(ts, F, FormFunctionSinglePipe, &params);
+	
+	//TSSetIFunction(ts, F, FormFunctionSinglePipe, &params);
+	TSSetIFunction(ts, F, FormFunction, &params);
 
 	Vec x;
 	DMCreateGlobalVector(domain, &x);
@@ -109,7 +112,7 @@ int main(int argc, char **argv) {
 	
 	TSSetFromOptions(ts);
 	
-	TSSolve(ts, x);
+	//TSSolve(ts, x);
 
 	//SNES snes;
 	//TSGetSNES(ts, &snes);
@@ -117,40 +120,37 @@ int main(int argc, char **argv) {
 	//SNESGetConvergedReason(snes, &reason);
 	//PetscPrintf(PETSC_COMM_WORLD, "snes reason %i", reason);
 
-	Vec analytical;
-	DMCreateGlobalVector(domain, &analytical);
+	//Vec analytical;
+	//DMCreateGlobalVector(domain, &analytical);
 
-	PetscInt ix, mx;
-	DMDAGetCorners(domain, &ix, NULL, NULL, &mx, NULL, NULL);
+	//PetscInt ix, mx;
+	//DMDAGetCorners(domain, &ix, NULL, NULL, &mx, NULL, NULL);
 
-	PetscScalar *analytical_array;
-	DMDAVecGetArray(domain, analytical, &analytical_array);
+	//PetscScalar *analytical_array;
+	//DMDAVecGetArray(domain, analytical, &analytical_array);
 
-	double dT_dx = (params.temperature_presc_[1] - params.temperature_presc_[0]) / wall_length;
-	for (int i = ix; i < ix + mx; i++) {
-		double x = i * wall_length / (nx - 1);
-		double T = params.temperature_presc_[0] + dT_dx * x;
-		analytical_array[i] = T;
-	}
-
-	DMDAVecRestoreArray(domain, analytical, &analytical_array);
-
-	VecAssemblyBegin(analytical);
-	VecAssemblyEnd(analytical);
-
-	Vec error;
-	DMCreateGlobalVector(domain, &error);
-
-	VecWAXPY(error, -1.0, x, analytical);
-
-	PetscReal error_norm;
-	VecNorm(error, NORM_2, &error_norm);
-
-	PetscPrintf(PETSC_COMM_WORLD, "\nError %g", error_norm);
-
-	//for (int i = 0; i < npipes; i++) {
-	//	DMDestroy(&pipes[i]);
+	//double dT_dx = (params.temperature_presc_[1] - params.temperature_presc_[0]) / wall_length;
+	//for (int i = ix; i < ix + mx; i++) {
+	//	double x = i * wall_length / (nx - 1);
+	//	double T = params.temperature_presc_[0] + dT_dx * x;
+	//	analytical_array[i] = T;
 	//}
+
+	//DMDAVecRestoreArray(domain, analytical, &analytical_array);
+
+	//VecAssemblyBegin(analytical);
+	//VecAssemblyEnd(analytical);
+
+	//Vec error;
+	//DMCreateGlobalVector(domain, &error);
+
+	//VecWAXPY(error, -1.0, x, analytical);
+
+	//PetscReal error_norm;
+	//VecNorm(error, NORM_2, &error_norm);
+
+	//PetscPrintf(PETSC_COMM_WORLD, "\nError %g", error_norm);
+
 	PetscFree(params.temperature_presc_);
 
 	DMDestroy(&domain);

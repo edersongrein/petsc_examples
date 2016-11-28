@@ -8,6 +8,10 @@
 #include <petsc/private/dmimpl.h> // This MUST BE INCLUDED FOR DEBUG REASONS!
 #include <petsc/private/tsimpl.h> // This MUST BE INCLUDED FOR DEBUG REASONS!
 
+#define NODES_SIZE 1
+#define PIPES_SIZE 4
+#define DMS_SIZE PIPES_SIZE + NODES_SIZE
+
 typedef struct Params {
     double* temperature_presc_;
     double  conductivity_;

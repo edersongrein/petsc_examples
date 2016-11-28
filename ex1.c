@@ -1,312 +1,190 @@
-﻿static const char help[] = "Time-dependent PDE in 1d. Simplified from ex15.c for illustrating how to solve DAEs. \n";
-/*
-u_t = uxx
-0 < x < 1;
-At t=0: u(x) = exp(c*r*r*r), if r=PetscSqrtReal((x-.5)*(x-.5)) < .125
-u(x) = 0.0           if r >= .125
-
-
-Boundary conditions:
-Dirichlet BC:
-At x=0, x=1, u = 0.0
-
-Neumann BC:
-At x=0, x=1: du(x,t)/dx = 0
-
-mpiexec -n 2 ./ex17 -da_grid_x 40 -ts_max_steps 2 -snes_monitor -ksp_monitor
-./ex17 -da_grid_x 40 -monitor_solution
-./ex17 -da_grid_x 100  -ts_type theta -ts_theta_theta 0.5 # Midpoint is not L-stable
-./ex17 -jac_type fd_coloring  -da_grid_x 500 -boundary 1
-./ex17 -da_grid_x 100  -ts_type gl -ts_adapt_type none -ts_max_steps 2
-*/
+﻿
+static const char help[] = "Solves PDE optimization problem using full-space method, treats state and adjoint variables separately.\n\n";
 
 #include <petscdm.h>
 #include <petscdmda.h>
-#include <petscts.h>
-
-typedef enum { JACOBIAN_ANALYTIC, JACOBIAN_FD_COLORING, JACOBIAN_FD_FULL } JacobianType;
-static const char *const JacobianTypes[] = { "analytic","fd_coloring","fd_full","JacobianType","fd_",0 };
+#include <petscdmredundant.h>
+#include <petscdmcomposite.h>
+#include <petscpf.h>
+#include <petscsnes.h>
 
 /*
-User-defined data structures and routines
-*/
-typedef struct {
-	PetscReal c;
-	PetscInt  boundary;            /* Type of boundary condition */
-	PetscBool viewJacobian;
-} AppCtx;
 
-static PetscErrorCode FormIFunction(TS, PetscReal, Vec, Vec, Vec, void*);
-static PetscErrorCode FormIJacobian(TS, PetscReal, Vec, Vec, PetscReal, Mat, Mat, void*);
-static PetscErrorCode FormInitialSolution(TS, Vec, void*);
+w - design variables (what we change to get an optimal solution)
+u - state variables (i.e. the PDE solution)
+lambda - the Lagrange multipliers
+
+U = (w u lambda)
+
+fu, fw, flambda contain the gradient of L(w,u,lambda)
+
+FU = (fw fu flambda)
+
+In this example the PDE is
+Uxx = 2,
+u(0) = w(0), thus this is the free parameter
+u(1) = 0
+the function we wish to minimize is
+\integral u^{2}
+
+The exact solution for u is given by u(x) = x*x - 1.25*x + .25
+
+Use the usual centered finite differences.
+
+Note we treat the problem as non-linear though it happens to be linear
+
+See ex22.c for the same code, but that interlaces the u and the lambda
+
+*/
+
+typedef struct {
+	DM          red1, da1, da2;
+	DM          packer;
+	PetscViewer u_viewer, lambda_viewer;
+	PetscViewer fu_viewer, flambda_viewer;
+} UserCtx;
+
+extern PetscErrorCode FormFunction(SNES, Vec, Vec, void*);
+extern PetscErrorCode Monitor(SNES, PetscInt, PetscReal, void*);
+
 
 #undef __FUNCT__
 #define __FUNCT__ "main"
 int main(int argc, char **argv)
 {
-	TS             ts;                   /* nonlinear solver */
-	Vec            u;                    /* solution, residual vectors */
-	Mat            J;                    /* Jacobian matrix */
-	PetscInt       maxsteps = 1000;     /* iterations for convergence */
-	PetscInt       nsteps;
-	PetscReal      vmin, vmax, norm;
 	PetscErrorCode ierr;
-	DM             da;
-	PetscReal      ftime, dt;
-	AppCtx         user;              /* user-defined work context */
-	JacobianType   jacType;
+	PetscInt       its;
+	Vec            U, FU;
+	SNES           snes;
+	UserCtx        user;
 
-	PetscInitialize(&argc, &argv, (char*)0, help);
+	ierr = PetscInitialize(&argc, &argv, (char*)0, help); CHKERRQ(ierr);
 
-	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	Create distributed array (DMDA) to manage parallel grid and vectors
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	PetscInt nx = 11;
-	PetscOptionsGetInt(NULL, NULL, "-nx", &nx, NULL);
-	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, -nx, 1, 1, NULL, &da); CHKERRQ(ierr);
+	/* Create a global vector that includes a single redundant array and two da arrays */
+	ierr = DMCompositeCreate(PETSC_COMM_WORLD, &user.packer); CHKERRQ(ierr);
+	ierr = DMRedundantCreate(PETSC_COMM_WORLD, 0, 1, &user.red1); CHKERRQ(ierr);
+	ierr = DMCompositeAddDM(user.packer, user.red1); CHKERRQ(ierr);
+	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, -5, 1, 1, NULL, &user.da1); CHKERRQ(ierr);
+	ierr = DMCompositeAddDM(user.packer, user.da1); CHKERRQ(ierr);
+	ierr = DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, -5, 1, 1, NULL, &user.da2); CHKERRQ(ierr);
+	ierr = DMCompositeAddDM(user.packer, user.da2); CHKERRQ(ierr);
+	ierr = DMCreateGlobalVector(user.packer, &U); CHKERRQ(ierr);
+	ierr = VecDuplicate(U, &FU); CHKERRQ(ierr);
 
-	/*  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	Extract global vectors from DMDA;
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = DMCreateGlobalVector(da, &u); CHKERRQ(ierr);
-
-	/* Initialize user application context */
-	user.c = -30.0;
-	user.boundary = 0;  /* 0: Dirichlet BC; 1: Neumann BC */
-	user.viewJacobian = PETSC_FALSE;
-
-	ierr = PetscOptionsGetInt(NULL, NULL, "-boundary", &user.boundary, NULL); CHKERRQ(ierr);
-	ierr = PetscOptionsHasName(NULL, NULL, "-viewJacobian", &user.viewJacobian); CHKERRQ(ierr);
-
-	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	Create timestepping solver context
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = TSCreate(PETSC_COMM_WORLD, &ts); CHKERRQ(ierr);
-	ierr = TSSetProblemType(ts, TS_NONLINEAR); CHKERRQ(ierr);
-	ierr = TSSetType(ts, TSTHETA); CHKERRQ(ierr);
-	ierr = TSThetaSetTheta(ts, 1.0); CHKERRQ(ierr); /* Make the Theta method behave like backward Euler */
-	ierr = TSSetIFunction(ts, NULL, FormIFunction, &user); CHKERRQ(ierr);
-
-	ierr = DMSetMatType(da, MATAIJ); CHKERRQ(ierr);
-	ierr = DMCreateMatrix(da, &J); CHKERRQ(ierr);
-	jacType = JACOBIAN_ANALYTIC; /* use user-provide Jacobian */
-
-	ierr = TSSetDM(ts, da); CHKERRQ(ierr); /* Use TSGetDM() to access. Setting here allows easy use of geometric multigrid. */
-
-	ftime = 0.1;
-	ierr = TSSetDuration(ts, maxsteps, ftime); CHKERRQ(ierr);
-	ierr = TSSetExactFinalTime(ts, TS_EXACTFINALTIME_STEPOVER); CHKERRQ(ierr);
-
-	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	Set initial conditions
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = FormInitialSolution(ts, u, &user); CHKERRQ(ierr);
-	ierr = TSSetSolution(ts, u); CHKERRQ(ierr);
-	dt = .01;
-	ierr = TSSetInitialTimeStep(ts, 0.0, dt); CHKERRQ(ierr);
+	/* create graphics windows */
+	ierr = PetscViewerDrawOpen(PETSC_COMM_WORLD, 0, "u - state variables", -1, -1, -1, -1, &user.u_viewer); CHKERRQ(ierr);
+	ierr = PetscViewerDrawOpen(PETSC_COMM_WORLD, 0, "lambda - Lagrange multipliers", -1, -1, -1, -1, &user.lambda_viewer); CHKERRQ(ierr);
+	ierr = PetscViewerDrawOpen(PETSC_COMM_WORLD, 0, "fu - derivate w.r.t. state variables", -1, -1, -1, -1, &user.fu_viewer); CHKERRQ(ierr);
+	ierr = PetscViewerDrawOpen(PETSC_COMM_WORLD, 0, "flambda - derivate w.r.t. Lagrange multipliers", -1, -1, -1, -1, &user.flambda_viewer); CHKERRQ(ierr);
 
 
-	/* Use slow fd Jacobian or fast fd Jacobian with colorings.
-	Note: this requirs snes which is not created until TSSetUp()/TSSetFromOptions() is called */
-	ierr = PetscOptionsBegin(PETSC_COMM_WORLD, NULL, "Options for Jacobian evaluation", NULL); CHKERRQ(ierr);
-	ierr = PetscOptionsEnum("-jac_type", "Type of Jacobian", "", JacobianTypes, (PetscEnum)jacType, (PetscEnum*)&jacType, 0); CHKERRQ(ierr);
-	ierr = PetscOptionsEnd(); CHKERRQ(ierr);
-	if (jacType == JACOBIAN_ANALYTIC) {
-		ierr = TSSetIJacobian(ts, J, J, FormIJacobian, &user); CHKERRQ(ierr);
-	}
-	else if (jacType == JACOBIAN_FD_COLORING) {
-		SNES snes;
-		ierr = TSGetSNES(ts, &snes); CHKERRQ(ierr);
-		ierr = SNESSetJacobian(snes, J, J, SNESComputeJacobianDefaultColor, 0); CHKERRQ(ierr);
-	}
-	else if (jacType == JACOBIAN_FD_FULL) {
-		SNES snes;
-		ierr = TSGetSNES(ts, &snes); CHKERRQ(ierr);
-		ierr = SNESSetJacobian(snes, J, J, SNESComputeJacobianDefault, &user); CHKERRQ(ierr);
-	}
+	/* create nonlinear solver */
+	ierr = SNESCreate(PETSC_COMM_WORLD, &snes); CHKERRQ(ierr);
+	ierr = SNESSetFunction(snes, FU, FormFunction, &user); CHKERRQ(ierr);
+	ierr = SNESSetFromOptions(snes); CHKERRQ(ierr);
+	//ierr = SNESMonitorSet(snes, Monitor, &user, 0); CHKERRQ(ierr);
+	ierr = SNESSolve(snes, NULL, U); CHKERRQ(ierr);
+	ierr = SNESGetIterationNumber(snes, &its); CHKERRQ(ierr);
+	ierr = SNESDestroy(&snes); CHKERRQ(ierr);
 
-	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	Set runtime options
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = TSSetFromOptions(ts); CHKERRQ(ierr);
-
-	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	Integrate ODE system
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = TSSolve(ts, u); CHKERRQ(ierr);
-
-	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	Compute diagnostics of the solution
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = VecNorm(u, NORM_1, &norm); CHKERRQ(ierr);
-	ierr = VecMax(u, NULL, &vmax); CHKERRQ(ierr);
-	ierr = VecMin(u, NULL, &vmin); CHKERRQ(ierr);
-	ierr = TSGetTimeStepNumber(ts, &nsteps); CHKERRQ(ierr);
-	ierr = TSGetTime(ts, &ftime); CHKERRQ(ierr);
-	ierr = PetscPrintf(PETSC_COMM_WORLD, "timestep %D: time %g, solution norm %g, max %g, min %g\n", nsteps, (double)ftime, (double)norm, (double)vmax, (double)vmin); CHKERRQ(ierr);
-
-	/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	Free work space.
-	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-	ierr = MatDestroy(&J); CHKERRQ(ierr);
-	ierr = VecDestroy(&u); CHKERRQ(ierr);
-	ierr = TSDestroy(&ts); CHKERRQ(ierr);
-	ierr = DMDestroy(&da); CHKERRQ(ierr);
+	ierr = DMDestroy(&user.red1); CHKERRQ(ierr);
+	ierr = DMDestroy(&user.da1); CHKERRQ(ierr);
+	ierr = DMDestroy(&user.da2); CHKERRQ(ierr);
+	ierr = DMDestroy(&user.packer); CHKERRQ(ierr);
+	ierr = VecDestroy(&U); CHKERRQ(ierr);
+	ierr = VecDestroy(&FU); CHKERRQ(ierr);
+	ierr = PetscViewerDestroy(&user.u_viewer); CHKERRQ(ierr);
+	ierr = PetscViewerDestroy(&user.lambda_viewer); CHKERRQ(ierr);
+	ierr = PetscViewerDestroy(&user.fu_viewer); CHKERRQ(ierr);
+	ierr = PetscViewerDestroy(&user.flambda_viewer); CHKERRQ(ierr);
 	ierr = PetscFinalize();
-	PetscFunctionReturn(0);
+	return 0;
 }
-/* ------------------------------------------------------------------- */
+
 #undef __FUNCT__
-#define __FUNCT__ "FormIFunction"
-static PetscErrorCode FormIFunction(TS ts, PetscReal ftime, Vec U, Vec Udot, Vec F, void *ptr)
-{
-	AppCtx         *user = (AppCtx*)ptr;
-	DM             da;
-	PetscErrorCode ierr;
-	PetscInt       i, Mx, xs, xm;
-	PetscReal      hx, sx;
-	PetscScalar    *u, *udot, *f;
-	Vec            localU;
-
-	PetscFunctionBeginUser;
-	ierr = TSGetDM(ts, &da); CHKERRQ(ierr);
-	ierr = DMGetLocalVector(da, &localU); CHKERRQ(ierr);
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE);
-
-	hx = 1.0 / (PetscReal)(Mx - 1); sx = 1.0 / (hx*hx);
-
-	/*
-	Scatter ghost points to local vector,using the 2-step process
-	DMGlobalToLocalBegin(),DMGlobalToLocalEnd().
-	By placing code between these two statements, computations can be
-	done while messages are in transition.
-	*/
-	ierr = DMGlobalToLocalBegin(da, U, INSERT_VALUES, localU); CHKERRQ(ierr);
-	ierr = DMGlobalToLocalEnd(da, U, INSERT_VALUES, localU); CHKERRQ(ierr);
-
-	/* Get pointers to vector data */
-	ierr = DMDAVecGetArrayRead(da, localU, &u); CHKERRQ(ierr);
-	ierr = DMDAVecGetArrayRead(da, Udot, &udot); CHKERRQ(ierr);
-	ierr = DMDAVecGetArray(da, F, &f); CHKERRQ(ierr);
-
-	/* Get local grid boundaries */
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL); CHKERRQ(ierr);
-
-	/* Compute function over the locally owned part of the grid */
-	for (i = xs; i<xs + xm; i++) {
-		if (user->boundary == 0) { /* Dirichlet BC */
-			if (i == 0 || i == Mx - 1) f[i] = u[i]; /* F = U */
-			else                     f[i] = udot[i] + (2.*u[i] - u[i - 1] - u[i + 1])*sx;
-		}
-		else { /* Neumann BC */
-			if (i == 0)         f[i] = u[0] - u[1];
-			else if (i == Mx - 1) f[i] = u[i] - u[i - 1];
-			else                f[i] = udot[i] + (2.*u[i] - u[i - 1] - u[i + 1])*sx;
-		}
-	}
-
-	/* Restore vectors */
-	ierr = DMDAVecRestoreArrayRead(da, localU, &u); CHKERRQ(ierr);
-	ierr = DMDAVecRestoreArrayRead(da, Udot, &udot); CHKERRQ(ierr);
-	ierr = DMDAVecRestoreArray(da, F, &f); CHKERRQ(ierr);
-	ierr = DMRestoreLocalVector(da, &localU); CHKERRQ(ierr);
-	PetscFunctionReturn(0);
-}
-
-/* --------------------------------------------------------------------- */
+#define __FUNCT__ "FormFunction"
 /*
-IJacobian - Compute IJacobian = dF/dU + a dF/dUdot
+Evaluates FU = Gradiant(L(w,u,lambda))
+
 */
-#undef __FUNCT__
-#define __FUNCT__ "FormIJacobian"
-PetscErrorCode FormIJacobian(TS ts, PetscReal t, Vec U, Vec Udot, PetscReal a, Mat J, Mat Jpre, void *ctx)
+PetscErrorCode FormFunction(SNES snes, Vec U, Vec FU, void *dummy)
 {
+	UserCtx        *user = (UserCtx*)dummy;
 	PetscErrorCode ierr;
-	PetscInt       i, rstart, rend, Mx;
-	PetscReal      hx, sx;
-	AppCtx         *user = (AppCtx*)ctx;
-	DM             da;
-	MatStencil     col[3], row;
-	PetscInt       nc;
-	PetscScalar    vals[3];
+	PetscInt       xs, xm, i, N;
+	PetscScalar    *u, *lambda, *w, *fu, *fw, *flambda, d, h;
+	Vec            vw, vu, vlambda, vfw, vfu, vflambda;
 
 	PetscFunctionBeginUser;
-	ierr = TSGetDM(ts, &da); CHKERRQ(ierr);
-	ierr = MatGetOwnershipRange(Jpre, &rstart, &rend); CHKERRQ(ierr);
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE,
-		PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE);
-	hx = 1.0 / (PetscReal)(Mx - 1); sx = 1.0 / (hx*hx);
-	for (i = rstart; i<rend; i++) {
-		nc = 0;
-		row.i = i;
-		if (user->boundary == 0 && (i == 0 || i == Mx - 1)) {
-			col[nc].i = i; vals[nc++] = 1.0;
-		}
-		else if (user->boundary > 0 && i == 0) { /* Left Neumann */
-			col[nc].i = i;   vals[nc++] = 1.0;
-			col[nc].i = i + 1; vals[nc++] = -1.0;
-		}
-		else if (user->boundary > 0 && i == Mx - 1) { /* Right Neumann */
-			col[nc].i = i - 1; vals[nc++] = -1.0;
-			col[nc].i = i;   vals[nc++] = 1.0;
-		}
-		else {                    /* Interior */
-			col[nc].i = i - 1; vals[nc++] = -1.0*sx;
-			col[nc].i = i;   vals[nc++] = 2.0*sx + a;
-			col[nc].i = i + 1; vals[nc++] = -1.0*sx;
-		}
-		ierr = MatSetValuesStencil(Jpre, 1, &row, nc, col, vals, INSERT_VALUES); CHKERRQ(ierr);
+	ierr = DMCompositeGetLocalVectors(user->packer, &vw, &vu, &vlambda); CHKERRQ(ierr);
+	ierr = DMCompositeGetLocalVectors(user->packer, &vfw, &vfu, &vflambda); CHKERRQ(ierr);
+	ierr = DMCompositeScatter(user->packer, U, vw, vu, vlambda); CHKERRQ(ierr);
+
+	ierr = DMDAGetCorners(user->da1, &xs, NULL, NULL, &xm, NULL, NULL); CHKERRQ(ierr);
+	ierr = DMDAGetInfo(user->da1, 0, &N, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); CHKERRQ(ierr);
+	ierr = VecGetArray(vw, &w); CHKERRQ(ierr);
+	ierr = VecGetArray(vfw, &fw); CHKERRQ(ierr);
+	ierr = DMDAVecGetArray(user->da1, vu, &u); CHKERRQ(ierr);
+	ierr = DMDAVecGetArray(user->da1, vfu, &fu); CHKERRQ(ierr);
+	ierr = DMDAVecGetArray(user->da1, vlambda, &lambda); CHKERRQ(ierr);
+	ierr = DMDAVecGetArray(user->da1, vflambda, &flambda); CHKERRQ(ierr);
+	d = (N - 1.0);
+	h = 1.0 / d;
+
+	/* derivative of L() w.r.t. w */
+	if (xs == 0) { /* only first processor computes this */
+		fw[0] = -2.*d*lambda[0];
 	}
 
-	ierr = MatAssemblyBegin(Jpre, MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
-	ierr = MatAssemblyEnd(Jpre, MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
-	if (J != Jpre) {
-		ierr = MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
-		ierr = MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
+	/* derivative of L() w.r.t. u */
+	for (i = xs; i<xs + xm; i++) {
+		if (i == 0)   flambda[0] = h*u[0] + 2.*d*lambda[0] - d*lambda[1];
+		else if (i == 1)   flambda[1] = 2.*h*u[1] + 2.*d*lambda[1] - d*lambda[2];
+		else if (i == N - 1) flambda[N - 1] = h*u[N - 1] + 2.*d*lambda[N - 1] - d*lambda[N - 2];
+		else if (i == N - 2) flambda[N - 2] = 2.*h*u[N - 2] + 2.*d*lambda[N - 2] - d*lambda[N - 3];
+		else               flambda[i] = 2.*h*u[i] - d*(lambda[i + 1] - 2.0*lambda[i] + lambda[i - 1]);
 	}
-	if (user->viewJacobian) {
-		ierr = PetscPrintf(PETSC_COMM_WORLD, "Jpre:\n"); CHKERRQ(ierr);
-		ierr = MatView(Jpre, PETSC_VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
+
+	/* derivative of L() w.r.t. lambda */
+	for (i = xs; i<xs + xm; i++) {
+		if (i == 0)   fu[0] = 2.0*d*(u[0] - w[0]);
+		else if (i == N - 1) fu[N - 1] = 2.0*d*u[N - 1];
+		else               fu[i] = -(d*(u[i + 1] - 2.0*u[i] + u[i - 1]) - 2.0*h);
 	}
+
+	ierr = VecRestoreArray(vw, &w); CHKERRQ(ierr);
+	ierr = VecRestoreArray(vfw, &fw); CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArray(user->da1, vu, &u); CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArray(user->da1, vfu, &fu); CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArray(user->da1, vlambda, &lambda); CHKERRQ(ierr);
+	ierr = DMDAVecRestoreArray(user->da1, vflambda, &flambda); CHKERRQ(ierr);
+
+	ierr = DMCompositeGather(user->packer, FU, INSERT_VALUES, vfw, vfu, vflambda); CHKERRQ(ierr);
+	ierr = DMCompositeRestoreLocalVectors(user->packer, &vw, &vu, &vlambda); CHKERRQ(ierr);
+	ierr = DMCompositeRestoreLocalVectors(user->packer, &vfw, &vfu, &vflambda); CHKERRQ(ierr);
 	PetscFunctionReturn(0);
 }
 
-/* ------------------------------------------------------------------- */
 #undef __FUNCT__
-#define __FUNCT__ "FormInitialSolution"
-PetscErrorCode FormInitialSolution(TS ts, Vec U, void *ptr)
+#define __FUNCT__ "Monitor"
+PetscErrorCode Monitor(SNES snes, PetscInt its, PetscReal rnorm, void *dummy)
 {
-	AppCtx         *user = (AppCtx*)ptr;
-	PetscReal      c = user->c;
-	DM             da;
+	UserCtx        *user = (UserCtx*)dummy;
 	PetscErrorCode ierr;
-	PetscInt       i, xs, xm, Mx;
-	PetscScalar    *u;
-	PetscReal      hx, x, r;
+	Vec            w, u, lambda, U, F;
 
 	PetscFunctionBeginUser;
-	ierr = TSGetDM(ts, &da); CHKERRQ(ierr);
-	ierr = DMDAGetInfo(da, PETSC_IGNORE, &Mx, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE, PETSC_IGNORE); CHKERRQ(ierr);
+	ierr = SNESGetSolution(snes, &U); CHKERRQ(ierr);
+	ierr = DMCompositeGetAccess(user->packer, U, &w, &u, &lambda); CHKERRQ(ierr);
+	ierr = VecView(u, user->u_viewer); CHKERRQ(ierr);
+	ierr = VecView(lambda, user->lambda_viewer); CHKERRQ(ierr);
+	ierr = DMCompositeRestoreAccess(user->packer, U, &w, &u, &lambda); CHKERRQ(ierr);
 
-	hx = 1.0 / (PetscReal)(Mx - 1);
-
-	/* Get pointers to vector data */
-	ierr = DMDAVecGetArray(da, U, &u); CHKERRQ(ierr);
-
-	/* Get local grid boundaries */
-	ierr = DMDAGetCorners(da, &xs, NULL, NULL, &xm, NULL, NULL); CHKERRQ(ierr);
-
-	/* Compute function over the locally owned part of the grid */
-	for (i = xs; i<xs + xm; i++) {
-		x = i*hx;
-		r = PetscSqrtReal((x - .5)*(x - .5));
-		if (r < .125) u[i] = PetscExpReal(c*r*r*r);
-		else          u[i] = 0.0;
-	}
-
-	/* Restore vectors */
-	ierr = DMDAVecRestoreArray(da, U, &u); CHKERRQ(ierr);
+	ierr = SNESGetFunction(snes, &F, 0, 0); CHKERRQ(ierr);
+	ierr = DMCompositeGetAccess(user->packer, F, &w, &u, &lambda); CHKERRQ(ierr);
+	ierr = VecView(u, user->fu_viewer); CHKERRQ(ierr);
+	ierr = VecView(lambda, user->flambda_viewer); CHKERRQ(ierr);
+	ierr = DMCompositeRestoreAccess(user->packer, F, &w, &u, &lambda); CHKERRQ(ierr);
 	PetscFunctionReturn(0);
 }
 
