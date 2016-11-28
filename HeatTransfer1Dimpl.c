@@ -290,9 +290,10 @@ PetscErrorCode FormFunctionSinglePipe(TS ts, PetscReal t, Vec X, Vec X_t, Vec F,
 	ierr = DMDAVecRestoreArrayRead(dm, X_t, &u_t); CHKERRQ(ierr);
 	ierr = DMDAVecRestoreArrayRead(dm, X_local, &u); CHKERRQ(ierr);
 	ierr = DMDAVecRestoreArray(dm, F, &f); CHKERRQ(ierr);
-
 	ierr = DMRestoreLocalVector(dm, &X_local); CHKERRQ(ierr);
 
-	
+	VecAssemblyBegin(F);
+	VecAssemblyEnd(F);
+
 	PetscFunctionReturn(0);
 }
