@@ -31,9 +31,9 @@ int main(int argc, char **argv) {
 	double dt = 0.001;
 	double dt_min = 1.0e-3;
 	double dt_max = 10.0;
-	double final_time = 10.0;
+	double final_time = 0.01;
 
-	PetscInt nx = 10000;
+	PetscInt nx = 11;
 	PetscOptionsGetInt(NULL, NULL, "-nx", &nx, NULL);
 
 	double temperature_presc[] = { 2.0, 50.0, 55.0, 60.0 };
@@ -111,7 +111,42 @@ int main(int argc, char **argv) {
 	
 	TSSolve(ts, x);
 
-	//VecView(x, PETSC_VIEWER_STDOUT_WORLD);
+	//SNES snes;
+	//TSGetSNES(ts, &snes);
+	//SNESConvergedReason reason;
+	//SNESGetConvergedReason(snes, &reason);
+	//PetscPrintf(PETSC_COMM_WORLD, "snes reason %i", reason);
+
+	Vec analytical;
+	DMCreateGlobalVector(domain, &analytical);
+
+	PetscInt ix, mx;
+	DMDAGetCorners(domain, &ix, NULL, NULL, &mx, NULL, NULL);
+
+	PetscScalar *analytical_array;
+	DMDAVecGetArray(domain, analytical, &analytical_array);
+
+	double dT_dx = (params.temperature_presc_[1] - params.temperature_presc_[0]) / wall_length;
+	for (int i = ix; i < ix + mx; i++) {
+		double x = i * wall_length / (nx - 1);
+		double T = params.temperature_presc_[0] + dT_dx * x;
+		analytical_array[i] = T;
+	}
+
+	DMDAVecRestoreArray(domain, analytical, &analytical_array);
+
+	VecAssemblyBegin(analytical);
+	VecAssemblyEnd(analytical);
+
+	Vec error;
+	DMCreateGlobalVector(domain, &error);
+
+	VecWAXPY(error, -1.0, x, analytical);
+
+	PetscReal error_norm;
+	VecNorm(error, NORM_2, &error_norm);
+
+	PetscPrintf(PETSC_COMM_WORLD, "\nError %g", error_norm);
 
 	//for (int i = 0; i < npipes; i++) {
 	//	DMDestroy(&pipes[i]);
