@@ -33,8 +33,21 @@ int main(int argc, char **argv) {
 	double dt_max = 10.0;
 	double final_time = 0.01;
 
-	PetscInt nx = 5;
+	PetscInt nx = 2;
 	PetscOptionsGetInt(NULL, NULL, "-nx", &nx, NULL);
+
+	int rank, n_prcs;
+	MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
+	MPI_Comm_size(PETSC_COMM_WORLD, &n_prcs);
+
+	PetscInt prc_owner[PIPES_SIZE];
+	int owner = 0;
+	for (int i = 0; i < PIPES_SIZE; i++) {
+		if (owner >= n_prcs) {
+			owner = 0;
+		}
+		prc_owner[i] = owner++;
+	}
 
 	double temperature_presc[] = { 2.0, 50.0, 55.0, 60.0 };
 
@@ -76,7 +89,7 @@ int main(int argc, char **argv) {
 
 	PetscInt dof = 1;
 	PetscInt stencil_width = 1;
-	PetscInt npipes = 4;
+
 	for (int i = 0; i < PIPES_SIZE; i++) {
 		DM pipe;
 		DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, nx, dof, stencil_width, NULL, &pipe);
