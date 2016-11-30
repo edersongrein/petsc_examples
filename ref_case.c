@@ -81,11 +81,19 @@ static PetscErrorCode CreateMatrix(DM shell, Mat *A)
 
 	if (prc_size == 1) {
 		ierr = DMCreateMatrix(composite, A); CHKERRQ(ierr);
-		return 0;
+	}
+	else{
+		ierr = DMCreateMatrix(composite, &local_A); CHKERRQ(ierr);
+		MatView(local_A, PETSC_VIEWER_STDOUT_SELF);
+		MPI_Barrier(PETSC_COMM_WORLD);
+
+		ierr = MatCreateMPIMatConcatenateSeqMat(PETSC_COMM_WORLD, local_A, PETSC_DECIDE, MAT_INITIAL_MATRIX, A); CHKERRQ(ierr);
 	}
 
-	ierr = DMCreateMatrix(composite, &local_A); CHKERRQ(ierr);
-	ierr = MatCreateMPIMatConcatenateSeqMat(PETSC_COMM_WORLD, local_A, PETSC_DECIDE, MAT_INITIAL_MATRIX, A); CHKERRQ(ierr);
+	//MatAssemblyBegin(*A, MAT_FINAL_ASSEMBLY);
+	//MatAssemblyEnd(*A, MAT_FINAL_ASSEMBLY);
+
+	//MatView(*A, PETSC_VIEWER_STDOUT_WORLD);
 
 	return 0;
 }
@@ -137,45 +145,45 @@ int main(int argc, char **argv) {
 	//DM domain;
 	//DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, nx, dof, stencil_width, NULL, &domain);
 
-	////////////////////////////////////////////////////////////
-	////				SHELL DM 							////
-	////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////
+	//////				SHELL DM 							////
+	//////////////////////////////////////////////////////////////
 
-	PetscInt prc_owner[PIPES_SIZE];
-	int owner = 0;
-	for (int i = 0; i < PIPES_SIZE; i++) {
-		if (owner >= n_prcs) {
-			owner = 0;
-		}
-		prc_owner[i] = owner++;
-	}
+	//PetscInt prc_owner[PIPES_SIZE];
+	//int owner = 0;
+	//for (int i = 0; i < PIPES_SIZE; i++) {
+	//	if (owner >= n_prcs) {
+	//		owner = 0;
+	//	}
+	//	prc_owner[i] = owner++;
+	//}
 
-	DM subdomain;
-	DMCompositeCreate(PETSC_COMM_SELF, &subdomain);
+	//DM subdomain;
+	//DMCompositeCreate(PETSC_COMM_SELF, &subdomain);
 
-	for (int p = 0; p < PIPES_SIZE; p++) {
-		if (prc_owner[p] == rank) {
-			DM pipe;
-			DMDACreate1d(PETSC_COMM_SELF, DM_BOUNDARY_GHOSTED, nx, dof, stencil_width, NULL, &pipe);
-			DMCompositeAddDM(subdomain, pipe);
-		}
-	}
+	//for (int p = 0; p < PIPES_SIZE; p++) {
+	//	if (prc_owner[p] == rank) {
+	//		DM pipe;
+	//		DMDACreate1d(PETSC_COMM_SELF, DM_BOUNDARY_GHOSTED, nx, dof, stencil_width, NULL, &pipe);
+	//		DMCompositeAddDM(subdomain, pipe);
+	//	}
+	//}
 
-	DM dm_redundant;
-	DMCreate(PETSC_COMM_WORLD, &dm_redundant);
-	DMSetType(dm_redundant, DMREDUNDANT);
-	RedundantSetSize(dm_redundant, n_prcs - 1, 1);
-	DMSetUp(dm_redundant);
+	//DM dm_redundant;
+	//DMCreate(PETSC_COMM_WORLD, &dm_redundant);
+	//DMSetType(dm_redundant, DMREDUNDANT);
+	//RedundantSetSize(dm_redundant, n_prcs - 1, 1);
+	//DMSetUp(dm_redundant);
 
-	DMCompositeAddDM(subdomain, dm_redundant);
-	DMCompositeSetCoupling(subdomain, FormCoupleLocations);
+	//DMCompositeAddDM(subdomain, dm_redundant);
+	////DMCompositeSetCoupling(subdomain, FormCoupleLocations);
 
-	DM domain;
-	DMShellCreate(PETSC_COMM_WORLD, &domain);
+	//DM domain;
+	//DMShellCreate(PETSC_COMM_WORLD, &domain);
 
-	DMShellSetContext(domain, subdomain); 
-	DMShellSetCreateGlobalVector(domain, CreateGlobalVector);
-	DMShellSetCreateMatrix(domain, CreateMatrix);
+	//DMShellSetContext(domain, subdomain); 
+	//DMShellSetCreateGlobalVector(domain, CreateGlobalVector);
+	//DMShellSetCreateMatrix(domain, CreateMatrix);
 
 	//////////////////////////////////////////////////////////////
 	//////				Multiple pipes						////
