@@ -110,8 +110,10 @@ int main(int argc, char **argv) {
 	double dt_min = 1.0e-3;
 	double dt_max = 10.0;
 	double final_time = 100.0;
+	
+	PetscErrorCode ierr;
 
-	PetscInt nx = 2;
+	PetscInt nx = 8;
 	PetscOptionsGetInt(NULL, NULL, "-nx", &nx, NULL);
 
 	int rank, n_prcs;
@@ -124,7 +126,7 @@ int main(int argc, char **argv) {
 	double wall_length = 1.0;
 
 	PetscInt dof = 1;
-	PetscInt stencil_width = 1;
+	PetscInt stencil_width = 0;
 
 	Params params;
 	params.conductivity_ = 1.0;
@@ -142,8 +144,45 @@ int main(int argc, char **argv) {
 	////////////////////////////////////////////////////////////
 	////				Single pipe							////
 	////////////////////////////////////////////////////////////
-	//DM domain;
-	//DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, nx, dof, stencil_width, NULL, &domain);
+	
+	DM domain;
+	PetscInt *lx;
+	PetscCalloc1(n_prcs, &lx);
+	for (int prc = 0; prc < n_prcs; prc++) {
+		if (prc == 0) {
+			lx[prc] = nx;
+		}
+		else {
+			lx[prc] = 0;
+		}
+	}
+	//for (int prc = 0; prc < n_prcs; prc++) {
+	//	PetscPrintf(PETSC_COMM_SELF,"%i ", lx[prc]);
+	//}
+	//PetscPrintf(PETSC_COMM_SELF, "\n");
+
+	DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_NONE, nx, dof, stencil_width, lx, &domain);	
+
+	//ierr = DMDACreate(PETSC_COMM_WORLD, &domain); CHKERRQ(ierr);
+	//ierr = DMSetDimension(domain, 1); CHKERRQ(ierr);
+	//ierr = DMDASetSizes(domain, nx, 1, 1); CHKERRQ(ierr);
+	//ierr = DMDASetNumProcs(domain, 1, PETSC_DECIDE, PETSC_DECIDE); CHKERRQ(ierr);
+	//ierr = DMDASetBoundaryType(domain, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE); CHKERRQ(ierr);
+	//ierr = DMDASetDof(domain, dof); CHKERRQ(ierr);
+	//ierr = DMDASetStencilWidth(domain, stencil_width); CHKERRQ(ierr);
+	//ierr = DMDASetOwnershipRanges(domain, lx, NULL, NULL); CHKERRQ(ierr);
+	///* This violates the behavior for other classes, but right now users expect negative dimensions to be handled this way */
+	//ierr = DMSetFromOptions(domain); CHKERRQ(ierr);
+	//ierr = DMSetUp(domain); CHKERRQ(ierr);
+
+	//DMDACreate(PETSC_COMM_WORLD, &domain);
+	//DMDASetBoundaryType(domain, DM_BOUNDARY_GHOSTED, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE);
+	//DMDASetSizes(domain, nx, 0, 0);
+	//DMDASetDof(domain, dof);
+	//DMDASetStencilWidth(domain, stencil_width);
+	//
+	//DMSetUp(domain);
+
 
 	//////////////////////////////////////////////////////////////
 	//////				SHELL DM 							////
@@ -216,8 +255,8 @@ int main(int argc, char **argv) {
 	Vec F;
 	DMCreateGlobalVector(domain, &F);
 
-	//TSSetIFunction(ts, F, FormFunctionSinglePipe, &params);
-	TSSetIFunction(ts, F, FormFunction, &params);
+	TSSetIFunction(ts, F, FormFunctionSinglePipe, &params);
+	//TSSetIFunction(ts, F, FormFunction, &params);
 
 	Vec x;
 	DMCreateGlobalVector(domain, &x);
@@ -235,15 +274,9 @@ int main(int argc, char **argv) {
 	TSAdaptSetStepLimits(adapt, dt_min, dt_max);
 	
 	TSSetFromOptions(ts);
-	
-	VecSet(F, 1.0);
-	VecAssemblyBegin(F);
-	VecAssemblyEnd(F);
-
-	VecView(F, PETSC_VIEWER_STDOUT_WORLD);
 	TSSolve(ts, x);
 
-	//VecView(x, PETSC_VIEWER_STDOUT_SELF);
+	VecView(x, PETSC_VIEWER_STDOUT_WORLD);
 	//SNES snes;
 	//TSGetSNES(ts, &snes);
 	//SNESConvergedReason reason;
@@ -282,9 +315,9 @@ int main(int argc, char **argv) {
 	//PetscPrintf(PETSC_COMM_WORLD, "\nError %g", error_norm);
 
 	PetscFree(params.temperature_presc_);
-
-	DMDestroy(&subdomain);
-	//DMDestroy(&domain);
+	PetscFree(lx);
+	//DMDestroy(&subdomain);
+	DMDestroy(&domain);
 	TSDestroy(&ts);
 
 	PetscFinalize();

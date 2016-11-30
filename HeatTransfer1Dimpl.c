@@ -267,25 +267,32 @@ PetscErrorCode FormFunctionSinglePipe(TS ts, PetscReal t, Vec X, Vec X_t, Vec F,
 	Field* u_t;
 	Field* u;
 	Field* f;
+	PetscInt local_size;
 
 	PetscFunctionBegin;
 
+
+	VecGetLocalSize(F, &local_size);
+
 	ierr = TSGetDM(ts, &dm); CHKERRQ(ierr);
 
-	DMGetLocalVector(dm, &X_local);	
-	DMGlobalToLocalBegin(dm, X, INSERT_VALUES, X_local);
-	DMGlobalToLocalEnd(dm, X, INSERT_VALUES, X_local);
+	if (local_size > 0) {
 
-	DMDAVecGetArrayRead(dm, X_local, &u);
-	DMDAVecGetArray(dm, F, &f);
-	DMDAVecGetArrayRead(dm, X_t, &u_t);
+		DMGetLocalVector(dm, &X_local);
+		DMGlobalToLocalBegin(dm, X, INSERT_VALUES, X_local);
+		DMGlobalToLocalEnd(dm, X, INSERT_VALUES, X_local);
 
-	FormFunctionLocal(dm, t, u, u_t, f, p, 0, 0);
+		DMDAVecGetArrayRead(dm, X_local, &u);
+		DMDAVecGetArray(dm, F, &f);
+		DMDAVecGetArrayRead(dm, X_t, &u_t);
 
-	ierr = DMDAVecRestoreArrayRead(dm, X_t, &u_t); CHKERRQ(ierr);
-	ierr = DMDAVecRestoreArrayRead(dm, X_local, &u); CHKERRQ(ierr);
-	ierr = DMDAVecRestoreArray(dm, F, &f); CHKERRQ(ierr);
-	ierr = DMRestoreLocalVector(dm, &X_local); CHKERRQ(ierr);
+		FormFunctionLocal(dm, t, u, u_t, f, p, 0, 0);
+
+		ierr = DMDAVecRestoreArrayRead(dm, X_t, &u_t); CHKERRQ(ierr);
+		ierr = DMDAVecRestoreArrayRead(dm, X_local, &u); CHKERRQ(ierr);
+		ierr = DMDAVecRestoreArray(dm, F, &f); CHKERRQ(ierr);
+		ierr = DMRestoreLocalVector(dm, &X_local); CHKERRQ(ierr);
+	}
 
 	VecAssemblyBegin(F);
 	VecAssemblyEnd(F);
