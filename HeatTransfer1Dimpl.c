@@ -29,25 +29,25 @@ PetscErrorCode FormFunctionLocal(DM dm, PetscReal t, Field *x, Field *x_t, Field
 	/*
 	Define mesh intervals ratios for uniform grid.
 	*/
-	dx = L / (PetscReal)(info.mx - 1);
+	dx = L / (PetscReal)(info.mx);
 	k = conductivity;
 
 	xints = info.xs;
 	xinte = info.xs + info.xm;
 
+	i = xints;
+	f[i].T = x_t[i].T * dx
+		- 1.0 * (+k * (x[i + 1].T - x[i].T) / dx + Q * dx);
+	
+	i = xinte - 1;
+	f[i].T = x_t[i].T * dx
+		- 1.0 * (-k * (x[i].T - x[i - 1].T) / dx + Q * dx);
+
 	/* Compute over the interior points */
-	for (i = xints; i<xinte; i++) {
-		if (i == 0) {
-			f[i].T = p->temperature_presc_[0] - x[i].T;
-		}
-		else if (i == info.mx - 1) {
-			f[i].T = p->temperature_presc_[1] - x[i].T;
-		}
-		else {
-			f[i].T = x_t[i].T * dx
-				- 1.0 * (+k * (x[i + 1].T - x[i].T) / dx
-					- k * (x[i].T - x[i - 1].T) / dx + Q * dx);
-		}
+	for (i = xints + 1; i<xinte - 1; i++) {
+		f[i].T = x_t[i].T * dx
+			- 1.0 * (+k * (x[i + 1].T - x[i].T) / dx
+				- k * (x[i].T - x[i - 1].T) / dx + Q * dx);
 	}
 
 	PetscFunctionReturn(0);
@@ -60,7 +60,7 @@ PetscErrorCode FormFunction(TS ts, PetscReal t, Vec X, Vec X_t, Vec F, Params *p
 {
     DMDALocalInfo  info;
     PetscErrorCode ierr;
-    DM             dm;
+    DM             global_domain, dm;
     PetscInt nDM;
 
     // TODO: Find a way to dynamically allocate these arrays in c
@@ -72,7 +72,9 @@ PetscErrorCode FormFunction(TS ts, PetscReal t, Vec X, Vec X_t, Vec F, Params *p
 
     PetscFunctionBegin;
 
-    ierr = TSGetDM(ts, &dm); CHKERRQ(ierr);    
+    ierr = TSGetDM(ts, &global_domain); CHKERRQ(ierr);
+	ierr = DMShellGetContext(global_domain, (void**)&dm);
+	ierr = DMCompositeGetEntries(global_domain, &dm);
     ierr = DMCompositeGetNumberDM(dm, &nDM); CHKERRQ(ierr);
     ierr = DMCompositeGetEntriesArray(dm, das); CHKERRQ(ierr);
 
@@ -132,7 +134,7 @@ PetscErrorCode FormFunction(TS ts, PetscReal t, Vec X, Vec X_t, Vec F, Params *p
 			ierr = DMDAGetLocalInfo(das[i], &info); CHKERRQ(ierr);
 			int pipe_end = info.mx - 1;
 
-			dx = L / (PetscReal)(info.mx - 1);
+			dx = L / (PetscReal)(info.mx);
 
 			double flux_term = k * (u[PIPES_SIZE][0].T - u[i][pipe_end].T) / dx;
 			f[PIPES_SIZE][0].T += +flux_term;
@@ -151,7 +153,7 @@ PetscErrorCode FormFunction(TS ts, PetscReal t, Vec X, Vec X_t, Vec F, Params *p
 		// left flux term w/ prescribed pressure
 		for (int i = 0; i < PIPES_SIZE; ++i) {
 			ierr = DMDAGetLocalInfo(das[i], &info); CHKERRQ(ierr);
-			dx = L / (PetscReal)(info.mx - 1);
+			dx = L / (PetscReal)(info.mx);
 
 			double Tpresc = p->temperature_presc_[i];			
 
@@ -217,16 +219,9 @@ PetscErrorCode FormCoupleLocations(DM dm, Mat A, PetscInt *dnz, PetscInt *onz, P
     // we need an IF here.
     if (!A) {
 		int next_pipe_start_idx = 0;
-		PetscPrintf(PETSC_COMM_WORLD, "FormCoupleLocations begin\n");
-		//int rank, n_prcs;
-		//MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-		//MPI_Comm_size(PETSC_COMM_WORLD, &n_prcs);
-		//if (rank == n_prcs -1) {
 		for (int i = 0; i < nDM - NODES_SIZE; ++i) {
 			ierr = DMDAGetLocalInfo(das[i], &info); CHKERRQ(ierr);
 			next_pipe_start_idx += info.mx;
-
-			PetscPrintf(PETSC_COMM_WORLD, "row %i, col %i\n", size - 1, next_pipe_start_idx - 1);
 
 			cols[0] = next_pipe_start_idx - 1;
 			row = size - 1;
@@ -235,13 +230,12 @@ PetscErrorCode FormCoupleLocations(DM dm, Mat A, PetscInt *dnz, PetscInt *onz, P
 			cols[0] = size - 1;
 			row = next_pipe_start_idx - 1;
 			ierr = MatPreallocateLocation(A, row, 1, cols, dnz, onz); CHKERRQ(ierr);
-			//}
 		}
-		PetscPrintf(PETSC_COMM_WORLD, "FormCoupleLocations end\n");
     }
     else {
         PetscScalar values[1];
 		int next_pipe_start_idx = 0;
+
 		for (int i = 0; i < nDM - NODES_SIZE; ++i) {
 			ierr = DMDAGetLocalInfo(das[i], &info); CHKERRQ(ierr);
 			next_pipe_start_idx += info.mx;
