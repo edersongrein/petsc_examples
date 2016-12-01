@@ -1,0 +1,3 @@
+W:/petsc_examples/network/wash/build/CMakeFiles/pipes1.dir
+W:/petsc_examples/network/wash/build/CMakeFiles/ALL_BUILD.dir
+W:/petsc_examples/network/wash/build/CMakeFiles/ZERO_CHECK.dir

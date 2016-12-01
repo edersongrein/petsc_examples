@@ -1,0 +1,8 @@
+﻿  Building Custom Rule W:/petsc_examples/network/wash/CMakeLists.txt
+  CMake does not need to re-run because W:\petsc_examples\network\wash\build\CMakeFiles\generate.stamp is up-to-date.
+  pipes1.c
+  pipeImpls.c
+  pipeInterface.c
+  Generating Code...
+  pipes1.vcxproj -> W:\petsc_examples\network\wash\build\Debug\pipes1.exe
+  pipes1.vcxproj -> W:/petsc_examples/network/wash/build/Debug/pipes1.pdb (Full PDB)
