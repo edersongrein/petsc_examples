@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include="W:\petsc_examples\network\pflow\build\CMakeFiles\1332970c37091bd767862108847079d3\generate.stamp.rule">
+    <CustomBuild Include="W:\petsc_examples\network_examples\pflow\build\CMakeFiles\e6ca77855110d6e774f95f22424428fd\generate.stamp.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
-      <UniqueIdentifier>{17B472D2-F3D2-4909-8869-D5A4C3FFAAEF}</UniqueIdentifier>
+      <UniqueIdentifier>{6A47AB4D-CF6A-4974-999D-1F7744079ADE}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -1,19 +1,19 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="W:\petsc_examples\network\pflow\pf.c">
+    <ClCompile Include="W:\petsc_examples\network_examples\pflow\pf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="W:\petsc_examples\network\pflow\PFReadData.c">
+    <ClCompile Include="W:\petsc_examples\network_examples\pflow\PFReadData.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="W:\petsc_examples\network\pflow\CMakeLists.txt" />
+    <CustomBuild Include="W:\petsc_examples\network_examples\pflow\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{62EB967C-D859-4A29-B4D7-8290E4AB1BD8}</UniqueIdentifier>
+      <UniqueIdentifier>{82197636-BC4A-4750-9D5F-11A39440C2B3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

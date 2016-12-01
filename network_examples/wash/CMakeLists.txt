@@ -11,7 +11,7 @@ find_package(PETSc REQUIRED)
 
 # Add executable called "main" that is built from the source files
 # "demo.cxx" and "demo_b.cxx". The extensions are automatically found.
-add_executable (pipes1 pipes1.c pipeImpls.c pipeInterface.c)
+add_executable (pipes1 pipes1.c pipe.h wash.h pipeImpls.c pipeInterface.c)
 
 target_link_libraries(
     pipes1

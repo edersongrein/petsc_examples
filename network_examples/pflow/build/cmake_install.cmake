@@ -1,4 +1,4 @@
-# Install script for directory: W:/petsc_examples/network/pflow
+# Install script for directory: W:/petsc_examples/network_examples/pflow
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -35,5 +35,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "W:/petsc_examples/network/pflow/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "W:/petsc_examples/network_examples/pflow/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

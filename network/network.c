@@ -1,315 +1,199 @@
-﻿#include <stdio.h>
+﻿static char help[] = "This example demonstrate the use of DMNetwork to solve a pipe flow single phase network problem";
 
-#include "HeatTransfer1Dimpl.h"
+#include <petscdmnetwork.h>
 
-static char help[] = "Solves a composite 1D heat transfer problem.\n\n";
+struct _p_VERTEXDATA {
+	char		bc_type[20];
+	PetscScalar bc_value;
+	PetscInt	index;
+} PETSC_ATTRIBUTEALIGNED(sizeof(PetscScalar));
 
-void configure_petsc_options() {
+typedef struct _p_VERTEXDATA *VERTEXDATA;
 
-	PetscOptionsSetValue(NULL, "-ts_type", "bdf");
-	PetscOptionsSetValue(NULL, "-ts_bdf_order", "1");
-	PetscOptionsSetValue(NULL, "-ts_adapt_type", "basic");
-	PetscOptionsSetValue(NULL, "-ts_bdf_adapt", "");
-	PetscOptionsSetValue(NULL, "-ts_monitor", "");
 
-	PetscOptionsSetValue(NULL, "-ts_fd_color", "");
-	//PetscOptionsSetValue(NULL, "-mat_view", "draw");
-	//PetscOptionsSetValue(NULL, "-draw_pause", "100");
-	//PetscOptionsSetValue(NULL, "-is_coloring_view", "");
-	//PetscOptionsSetValue(NULL, "-help", "");
+struct _p_PIPEDATA {
+	PetscScalar diameter;
+	PetscScalar length;
+	PetscInt	nx;
+	PetscInt	inlet_vertex;
+	PetscInt	outlet_vertex;
+	PetscInt	index;
+} PETSC_ATTRIBUTEALIGNED(sizeof(PetscScalar));
 
-}
+typedef struct _p_PIPEDATA *PIPEDATA;
 
-#undef __FUNCT__
-#define __FUNCT__ "CreateGlobalVector"
-static PetscErrorCode CreateGlobalVector(DM shell, Vec *x)
-{
-	PetscErrorCode	ierr;
-	DM				*local_dms, composite;
-	PetscInt		nDMs, local_size, dm_size, rank;
-
-	MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-	ierr = DMShellGetContext(shell, (void**)&composite); CHKERRQ(ierr);
-	ierr = DMCompositeGetNumberDM(composite, &nDMs);
-	PetscMalloc1(nDMs, &local_dms);
-	DMCompositeGetEntriesArray(composite, local_dms);
-	local_size = 0;
-	for (int p = 0; p < nDMs; p++) {
-		DMType dm_type;
-		DMGetType(local_dms[p], &dm_type);
-		
-		PetscBool type_matched = PETSC_FALSE;
-		PetscStrcmp(dm_type, DMDA, &type_matched);
-		if (type_matched) {
-			DMDAGetCorners(local_dms[p], NULL, NULL, NULL, &dm_size, NULL, NULL);
-		}
-
-		PetscStrcmp(dm_type, DMREDUNDANT, &type_matched);
-		if (type_matched) {
-			PetscInt prc_owner;
-			DMRedundantGetSize(local_dms[p], &prc_owner, &dm_size);
-			if (prc_owner != rank) {
-				dm_size = 0;
-			}
-		}
-
-		local_size += dm_size;
-	}
-
-	VecCreate(PETSC_COMM_WORLD, x);
-	VecSetSizes(*x, local_size, PETSC_DECIDE);
-
-	ierr = VecSetDM(*x, shell); CHKERRQ(ierr);
-	
-	ierr = VecSetFromOptions(*x); CHKERRQ(ierr);
-	PetscFree(local_dms);
-
-	return 0;
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "CreateMatrix"
-static PetscErrorCode CreateMatrix(DM shell, Mat *A)
-{
-	PetscErrorCode	ierr;
-	DM				composite;
-	Mat				local_A;
-	PetscInt		prc_size;
-
-	ierr = DMShellGetContext(shell, (void**)&composite); CHKERRQ(ierr);
-	MPI_Comm_size(PETSC_COMM_WORLD, &prc_size);
-
-	if (prc_size == 1) {
-		ierr = DMCreateMatrix(composite, A); CHKERRQ(ierr);
-	}
-	else{
-		ierr = DMCreateMatrix(composite, &local_A); CHKERRQ(ierr);
-		MatView(local_A, PETSC_VIEWER_STDOUT_SELF);
-		MPI_Barrier(PETSC_COMM_WORLD);
-
-		ierr = MatCreateMPIMatConcatenateSeqMat(PETSC_COMM_WORLD, local_A, PETSC_DECIDE, MAT_INITIAL_MATRIX, A); CHKERRQ(ierr);
-	}
-
-	//MatAssemblyBegin(*A, MAT_FINAL_ASSEMBLY);
-	//MatAssemblyEnd(*A, MAT_FINAL_ASSEMBLY);
-
-	//MatView(*A, PETSC_VIEWER_STDOUT_WORLD);
-
-	return 0;
-}
-
-#undef __FUNCT__
-#define __FUNCT__ "main"
 int main(int argc, char **argv) {
+	PetscInt							rank, n_prcs;
+	PetscErrorCode						ierr;
+	DM									networkdm;
+	PetscInt							componentkeys[2];
+	DMNetworkComponentGenericDataType	*components_data;
+	PetscInt							*connectivity;
+	PetscInt							edges_count = 0;
+	PetscInt							vertices_count = 0;
+	PetscInt							eStart, eEnd, vStart, vEnd;
+	PIPEDATA							*pipes_data;
+	VERTEXDATA							*vertices_data;
+	PetscInt							key, offset;
+	DM									composite;
 
-	PetscInitialize(&argc, &argv, (char*)0, help);
+	PetscInitialize(&argc, &argv, NULL, help);
+	ierr = MPI_Comm_rank(PETSC_COMM_WORLD, &rank); CHKERRQ(ierr);
 
-	configure_petsc_options();
+	/* Create an empty network object */
+	ierr = DMNetworkCreate(PETSC_COMM_WORLD, &networkdm); CHKERRQ(ierr);
 
-	double dt = 0.001;
-	double dt_min = 1.0e-3;
-	double dt_max = 10.0;
-	double final_time = 100.0;
-	
-	PetscErrorCode ierr;
+	// Registering components
+	ierr = DMNetworkRegisterComponent(networkdm, "pipe", sizeof(struct _p_PIPEDATA), &componentkeys[0]); CHKERRQ(ierr);
+	ierr = DMNetworkRegisterComponent(networkdm, "vertex", sizeof(struct _p_VERTEXDATA), &componentkeys[1]); CHKERRQ(ierr);
 
-	PetscInt nx = 8;
-	PetscOptionsGetInt(NULL, NULL, "-nx", &nx, NULL);
-
-	int rank, n_prcs;
-	MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-	MPI_Comm_size(PETSC_COMM_WORLD, &n_prcs);
-
-	double initial_temperature = 0.0;
-	double conductivity = 1.0;
-	double source_term = 0.0;
-	double wall_length = 1.0;
-
-	PetscInt dof = 1;
-	PetscInt stencil_width = 0;
-
-	Params params;
-	params.conductivity_ = 1.0;
-	params.source_term_ = 0.0;
-	params.wall_length_ = 1.0;
-	PetscMalloc1(4, &params.temperature_presc_);
-	params.temperature_presc_[0] = 2.0;
-	params.temperature_presc_[1] = 10.0;
-	params.temperature_presc_[2] = 55.0;
-	params.temperature_presc_[3] = 60.0;
-
-	TS ts;
-	TSCreate(PETSC_COMM_WORLD, &ts);
-
-	////////////////////////////////////////////////////////////
-	////				Single pipe							////
-	////////////////////////////////////////////////////////////
-	
-	DM domain;
 	if (rank == 0) {
-		stencil_width = 1;
-	}
-	else {
-		stencil_width = 0;
+		ierr = PetscMalloc1(4, &connectivity); CHKERRQ(ierr);
+		connectivity[0] = 0;
+		connectivity[1] = 2;
+		connectivity[2] = 2;
+		connectivity[3] = 1;
+		edges_count = 2;
+		vertices_count = 3;
 	}
 
-	PetscInt *lx;
-	PetscCalloc1(n_prcs, &lx);
-	for (int prc = 0; prc < n_prcs; prc++) {
-		if (prc == 0) {
-			lx[prc] = nx;
+	// Size
+	ierr = DMNetworkSetSizes(networkdm, vertices_count, edges_count, PETSC_DETERMINE, PETSC_DETERMINE); CHKERRQ(ierr);
+
+	// Connectivity
+	ierr = DMNetworkSetEdgeList(networkdm, connectivity); CHKERRQ(ierr);
+	ierr = DMNetworkLayoutSetUp(networkdm); CHKERRQ(ierr);
+
+	// Components 
+	if (rank == 0) {
+		PetscMalloc1(vertices_count, &vertices_data);
+		PetscMalloc1(edges_count, &pipes_data);
+
+		for (int i = 0; i < vertices_count; i++) {
+			PetscMalloc1(1, &(vertices_data[i]));
+		}
+		for (int i = 0; i < edges_count; i++) {
+			PetscMalloc1(1, &(pipes_data[i]));
+		}
+
+		strcpy(vertices_data[0]->bc_type, "flow_rate");
+		vertices_data[0]->bc_value = 0.01;
+		vertices_data[0]->index = 0;
+
+		strcpy(vertices_data[1]->bc_type, "pressure");
+		vertices_data[1]->bc_value = 1.0e5;
+		vertices_data[1]->index = 1;
+
+		for (int i = 2; i < vertices_count; i++) {
+			vertices_data[i]->index = i;
+		}
+
+		for (int i = 0; i < edges_count; i++) {
+			pipes_data[i]->diameter = 0.1;
+			pipes_data[i]->length = 100.0;
+			pipes_data[i]->nx = 4;
+			pipes_data[i]->inlet_vertex = connectivity[2 * i];
+			pipes_data[i]->outlet_vertex = connectivity[2 * i + 1];
+			pipes_data[i]->index = i;
 		}
 	}
 
-	ierr = DMDACreate(PETSC_COMM_WORLD, &domain); CHKERRQ(ierr);
-	ierr = DMSetDimension(domain, 1); CHKERRQ(ierr);
-	ierr = DMDASetSizes(domain, nx, 1, 1); CHKERRQ(ierr);
-	ierr = DMDASetBoundaryType(domain, DM_BOUNDARY_GHOSTED, DM_BOUNDARY_NONE, DM_BOUNDARY_NONE); CHKERRQ(ierr);
-	ierr = DMDASetDof(domain, dof); CHKERRQ(ierr);
-	ierr = DMDASetStencilWidth(domain, 1); CHKERRQ(ierr);
-	ierr = DMDASetNumProcs(domain, n_prcs, PETSC_DECIDE, PETSC_DECIDE); CHKERRQ(ierr);
-	ierr = DMDASetOwnershipRanges(domain, lx, NULL, NULL); CHKERRQ(ierr);
+	DMNetworkGetEdgeRange(networkdm, &eStart, &eEnd);
+	for (int i = eStart; i < eEnd; i++) {
+		DMNetworkAddComponent(networkdm, i, componentkeys[0], pipes_data[i - eStart]);
+		DMNetworkAddNumVariables(networkdm, i, pipes_data[i-eStart]->nx);
+	}
 
-	ierr = DMSetFromOptions(domain); CHKERRQ(ierr);
-	ierr = DMSetUp(domain); CHKERRQ(ierr);
+	DMNetworkGetVertexRange(networkdm, &vStart, &vEnd);
+	for (int i = vStart; i < vEnd; i++) {
+		DMNetworkAddComponent(networkdm, i, componentkeys[1], vertices_data[i - vStart]);
+		DMNetworkAddNumVariables(networkdm, i, 1);
+	}
 
-	//////////////////////////////////////////////////////////////
-	//////				SHELL DM 							////
-	//////////////////////////////////////////////////////////////
+	DMSetUp(networkdm);
 
-	//PetscInt prc_owner[PIPES_SIZE];
-	//int owner = 0;
-	//for (int i = 0; i < PIPES_SIZE; i++) {
-	//	if (owner >= n_prcs) {
-	//		owner = 0;
-	//	}
-	//	prc_owner[i] = owner++;
-	//}
+	if (rank == 0) {
+		PetscFree(connectivity);
+		for (int i = 0; i < vertices_count; i++) {
+			PetscFree(vertices_data[i]);
+		}
+		for (int i = 0; i < edges_count; i++) {
+			PetscFree(pipes_data[i]);
+		}
+		PetscFree(vertices_data);
+		PetscFree(pipes_data);
+	}
 
-	//DM subdomain;
-	//DMCompositeCreate(PETSC_COMM_SELF, &subdomain);
+	ierr = MPI_Comm_size(PETSC_COMM_WORLD, &n_prcs); CHKERRQ(ierr);
+	if (n_prcs > 1) {
+		DM distnetworkdm;
+		/* Network partitioning and distribution of data */
+		ierr = DMNetworkDistribute(networkdm, 0, &distnetworkdm); CHKERRQ(ierr);
+		ierr = DMDestroy(&networkdm); CHKERRQ(ierr);
+		networkdm = distnetworkdm;
+	}
 
-	//for (int p = 0; p < PIPES_SIZE; p++) {
-	//	if (prc_owner[p] == rank) {
-	//		DM pipe;
-	//		DMDACreate1d(PETSC_COMM_SELF, DM_BOUNDARY_GHOSTED, nx, dof, stencil_width, NULL, &pipe);
-	//		DMCompositeAddDM(subdomain, pipe);
-	//	}
-	//}
+#if SHOW_DIVISION
+	PetscInt numComponents;
+	DMNetworkComponentGenericDataType *arr;
+	PIPEDATA pipe;
+	VERTEXDATA vertex;
 
-	//DM dm_redundant;
-	//DMCreate(PETSC_COMM_WORLD, &dm_redundant);
-	//DMSetType(dm_redundant, DMREDUNDANT);
-	//RedundantSetSize(dm_redundant, n_prcs - 1, 1);
-	//DMSetUp(dm_redundant);
+	ierr = DMNetworkGetEdgeRange(networkdm, &eStart, &eEnd); CHKERRQ(ierr);
+	ierr = DMNetworkGetVertexRange(networkdm, &vStart, &vEnd); CHKERRQ(ierr);
 
-	//DMCompositeAddDM(subdomain, dm_redundant);
-	////DMCompositeSetCoupling(subdomain, FormCoupleLocations);
+	ierr = DMNetworkGetComponentDataArray(networkdm, &arr); CHKERRQ(ierr);
 
-	//DM domain;
-	//DMShellCreate(PETSC_COMM_WORLD, &domain);
+	for (int i = eStart; i < eEnd; i++) {
+		ierr = DMNetworkGetComponentTypeOffset(networkdm, i, 0, &key, &offset); CHKERRQ(ierr);
+		pipe = (PIPEDATA)(arr + offset);
+		ierr = DMNetworkGetNumComponents(networkdm, i, &numComponents); CHKERRQ(ierr);
+		ierr = PetscPrintf(PETSC_COMM_SELF, "Rank %d ncomps = %d Line %d ---- %d\n", rank, numComponents, pipe->inlet_vertex, pipe->outlet_vertex); CHKERRQ(ierr);
+	}
 
-	//DMShellSetContext(domain, subdomain); 
-	//DMShellSetCreateGlobalVector(domain, CreateGlobalVector);
-	//DMShellSetCreateMatrix(domain, CreateMatrix);
+	for (int i = vStart; i < vEnd; i++) {
+		ierr = DMNetworkGetComponentTypeOffset(networkdm, i, 0, &key, &offset); CHKERRQ(ierr);
+		vertex = (VERTEXDATA)(arr + offset);
+		ierr = PetscPrintf(PETSC_COMM_SELF, "Rank %d ncomps = %d Node %d\n", rank, numComponents, vertex->index); CHKERRQ(ierr);
+	}
+#endif
 
-	//////////////////////////////////////////////////////////////
-	//////				Multiple pipes						////
-	//////////////////////////////////////////////////////////////
-	//DM* pipes;
+	ierr = DMNetworkGetEdgeRange(networkdm, &eStart, &eEnd); CHKERRQ(ierr);
+	ierr = DMNetworkGetVertexRange(networkdm, &vStart, &vEnd); CHKERRQ(ierr);
 
-	//DM dm_redundant;
-	//DMCreate(PETSC_COMM_WORLD, &dm_redundant);
-	//DMSetType(dm_redundant, DMREDUNDANT);
-	//RedundantSetSize(dm_redundant, 0, 1);
-	//DMSetUp(dm_redundant);
+	ierr = DMNetworkGetComponentDataArray(networkdm, &components_data); CHKERRQ(ierr);
 
-	//DM domain;
-	//DMCompositeCreate(PETSC_COMM_WORLD, &domain);
+	PetscMalloc1(eEnd - eStart, &pipes_data);
+	PetscMalloc1(vEnd - vStart, &vertices_data);
 
-	//for (int i = 0; i < PIPES_SIZE; i++) {
-	//	DM pipe;
-	//	DMDACreate1d(PETSC_COMM_WORLD, DM_BOUNDARY_GHOSTED, nx, dof, stencil_width, NULL, &pipe);
-	//	DMCompositeAddDM(domain, pipe);
-	//}
+	for (int i = eStart; i < eEnd; i++) {
+		ierr = DMNetworkGetComponentTypeOffset(networkdm, i, 0, &key, &offset); CHKERRQ(ierr);
+		pipes_data[i-eStart] = (PIPEDATA)(components_data + offset);
+	}
 
-	//DMCompositeAddDM(domain, dm_redundant);
-
-	//DMCompositeSetCoupling(domain, FormCoupleLocations);
-
-	//////////////////////////////////////////////////////////////
-
-	TSSetDM(ts, domain);
-
-	Vec F;
-	DMCreateGlobalVector(domain, &F);
-
-	TSSetIFunction(ts, F, FormFunctionSinglePipe, &params);
-	//TSSetIFunction(ts, F, FormFunction, &params);
+	for (int i = vStart; i < vEnd; i++) {
+		ierr = DMNetworkGetComponentTypeOffset(networkdm, i, 0, &key, &offset); CHKERRQ(ierr);
+		vertices_data[i-vStart] = (VERTEXDATA)(components_data + offset);
+	}
 
 	Vec x;
-	DMCreateGlobalVector(domain, &x);
-	VecSet(x, initial_temperature);
-	
-	TSSetDuration(ts, PETSC_DEFAULT, final_time);
-	TSSetExactFinalTime(ts, TS_EXACTFINALTIME_STEPOVER);
-
-	TSSetInitialTimeStep(ts, 0.0, dt);
-
-	TSSetProblemType(ts, TS_NONLINEAR);
-
-	TSAdapt adapt;
-	TSGetAdapt(ts, &adapt);
-	TSAdaptSetStepLimits(adapt, dt_min, dt_max);
-	
-	TSSetFromOptions(ts);
-	TSSolve(ts, x);
-
+	DMCreateGlobalVector(networkdm, &x);
+	VecSet(x, 2.0);
+	VecAssemblyBegin(x);
+	VecAssemblyEnd(x);
 	VecView(x, PETSC_VIEWER_STDOUT_WORLD);
-	//SNES snes;
-	//TSGetSNES(ts, &snes);
-	//SNESConvergedReason reason;
-	//SNESGetConvergedReason(snes, &reason);
-	//PetscPrintf(PETSC_COMM_WORLD, "snes reason %i", reason);
 
-	//Vec analytical;
-	//DMCreateGlobalVector(domain, &analytical);
+	Mat J;
+	DMCreateMatrix(networkdm, &J);
+	MatAssemblyBegin(J, MAT_FINAL_ASSEMBLY);
+	MatAssemblyEnd(J, MAT_FINAL_ASSEMBLY);
+	MatView(J, PETSC_VIEWER_STDOUT_WORLD);
 
-	//PetscInt ix, mx;
-	//DMDAGetCorners(domain, &ix, NULL, NULL, &mx, NULL, NULL);
+	PetscFree(pipes_data);
+	PetscFree(vertices_data);
 
-	//PetscScalar *analytical_array;
-	//DMDAVecGetArray(domain, analytical, &analytical_array);
-
-	//double dT_dx = (params.temperature_presc_[1] - params.temperature_presc_[0]) / wall_length;
-	//for (int i = ix; i < ix + mx; i++) {
-	//	double x = i * wall_length / (nx - 1);
-	//	double T = params.temperature_presc_[0] + dT_dx * x;
-	//	analytical_array[i] = T;
-	//}
-
-	//DMDAVecRestoreArray(domain, analytical, &analytical_array);
-
-	//VecAssemblyBegin(analytical);
-	//VecAssemblyEnd(analytical);
-
-	//Vec error;
-	//DMCreateGlobalVector(domain, &error);
-
-	//VecWAXPY(error, -1.0, x, analytical);
-
-	//PetscReal error_norm;
-	//VecNorm(error, NORM_2, &error_norm);
-
-	//PetscPrintf(PETSC_COMM_WORLD, "\nError %g", error_norm);
-
-	PetscFree(params.temperature_presc_);
-	//PetscFree(lx);
-	//DMDestroy(&subdomain);
-	DMDestroy(&domain);
-	TSDestroy(&ts);
-
-	PetscFinalize();
+	ierr = DMDestroy(&networkdm);
+	ierr = PetscFinalize(); CHKERRQ(ierr);
 
 	return 0;
 }
