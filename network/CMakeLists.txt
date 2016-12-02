@@ -15,6 +15,8 @@ add_executable (ref_case ref_case.c HeatTransfer1Dimpl.h HeatTransfer1Dimpl.c in
 
 add_executable (network network.c)
 
+add_executable (pipes1 pipes1.c pipe.h pipeImpls.c pipeInterface.c wash.h)
+
 target_link_libraries(
     ex1
     PUBLIC
@@ -28,6 +30,12 @@ target_link_libraries(
 
 target_link_libraries(
 	network
+    PUBLIC
+        PETSC::PETSC	
+)
+
+target_link_libraries(
+	pipes1
     PUBLIC
         PETSC::PETSC	
 )

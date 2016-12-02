@@ -729,6 +729,98 @@ int main(int argc,char ** argv)
   ierr = TSSetFromOptions(ts);CHKERRQ(ierr);
 
   ierr = WASHSetInitialSolution(networkdm,X,wash);CHKERRQ(ierr);
+  
+  DMNetworkHasJacobian(networkdm, PETSC_TRUE, PETSC_TRUE);
+
+  PetscInt *n_connected_edges;
+  PetscCalloc1(numVertices, &n_connected_edges);
+
+  for (e = eStart; e < eEnd; e++) { /* each edge has only one component, pipe */
+	  ierr = DMNetworkGetComponentTypeOffset(networkdm, e, 0, &type, &pipeoffset); CHKERRQ(ierr);
+	  ierr = DMNetworkGetVariableOffset(networkdm, e, &varoffset); CHKERRQ(ierr);
+	  pipe = (Pipe)(nwarr + pipeoffset);
+	  Mat J;
+	  DMCreateMatrix(pipe->da, &J);
+
+	  
+	  /* Setup conntected vertices */
+	  ierr = DMNetworkGetConnectedNodes(networkdm, e, &cone); CHKERRQ(ierr);
+	  vfrom = cone[0]; /* local ordering */
+	  vto = cone[1];
+
+	  n_connected_edges[vfrom-vStart]++;
+	  n_connected_edges[vto-vStart]++;
+
+	  Mat J_from, J_to;
+	  PetscInt d_nnz[12];
+	  for (int i = 0; i < 12; i++) {
+		  d_nnz[i] = 0;
+	  }
+	  d_nnz[0] = 2; d_nnz[11] = 2;
+	  d_nnz[1] = 2; d_nnz[10] = 2;
+
+	  MatCreateAIJ(PETSC_COMM_SELF, 12, 2, PETSC_DETERMINE, PETSC_DETERMINE, 0, d_nnz, 0, NULL, &J_from);
+	  MatCreateAIJ(PETSC_COMM_SELF, 12, 2, PETSC_DETERMINE, PETSC_DETERMINE, 0, d_nnz, 0, NULL, &J_to);
+
+	  MatSetValue(J_from, 0, 0, 1.0, INSERT_VALUES);
+	  MatSetValue(J_from, 0, 1, 1.0, INSERT_VALUES);
+	  MatSetValue(J_from, 1, 0, 1.0, INSERT_VALUES);
+	  MatSetValue(J_from, 1, 1, 1.0, INSERT_VALUES);
+	  MatSetValue(J_to, 10, 0, 1.0, INSERT_VALUES);
+	  MatSetValue(J_to, 10, 1, 1.0, INSERT_VALUES);
+	  MatSetValue(J_to, 11, 0, 1.0, INSERT_VALUES);
+	  MatSetValue(J_to, 11, 1, 1.0, INSERT_VALUES);
+
+	  MatAssemblyBegin(J_from, MAT_FINAL_ASSEMBLY);
+	  MatAssemblyBegin(J_to, MAT_FINAL_ASSEMBLY);
+	  MatAssemblyEnd(J_from, MAT_FINAL_ASSEMBLY);
+	  MatAssemblyEnd(J_to, MAT_FINAL_ASSEMBLY);
+
+	  Mat Js[] = { J, J_from, J_to };
+
+	  DMNetworkEdgeSetMatrix(networkdm, e, Js);
+  }
+
+  for (v = vStart; v < vEnd; v++) {
+	  Mat *Js;
+	  PetscMalloc1(2 * n_connected_edges[v-vStart] + 1, &Js);
+	  MatCreateDense(PETSC_COMM_SELF, 2, 2, PETSC_DETERMINE, PETSC_DETERMINE, NULL, &Js[0]);
+	  MatSetValue(Js[0], 0, 0, 1.0, INSERT_VALUES);
+	  MatSetValue(Js[0], 0, 1, 1.0, INSERT_VALUES);
+	  MatSetValue(Js[0], 1, 0, 1.0, INSERT_VALUES);
+	  MatSetValue(Js[0], 1, 1, 1.0, INSERT_VALUES);
+
+	  MatAssemblyBegin(Js[0], MAT_FINAL_ASSEMBLY);
+	  MatAssemblyEnd(Js[0], MAT_FINAL_ASSEMBLY);
+
+	  for (e = 0; e < n_connected_edges[v-vStart]; e++) {
+		  MatCreateAIJ(PETSC_COMM_SELF, 2, 12, PETSC_DETERMINE, PETSC_DETERMINE, 4, NULL, 0, NULL, &Js[1 + 2*e]);
+		  MatSetValue(Js[1 + 2 * e], 0, 0, 1.0, INSERT_VALUES);
+		  MatSetValue(Js[1 + 2 * e], 0, 1, 1.0, INSERT_VALUES);
+		  MatSetValue(Js[1 + 2 * e], 1, 0, 1.0, INSERT_VALUES);
+		  MatSetValue(Js[1 + 2 * e], 1, 1, 1.0, INSERT_VALUES);
+		  MatSetValue(Js[1 + 2 * e], 0, 10, 1.0, INSERT_VALUES);
+		  MatSetValue(Js[1 + 2 * e], 0, 11, 1.0, INSERT_VALUES);
+		  MatSetValue(Js[1 + 2 * e], 1, 10, 1.0, INSERT_VALUES);
+		  MatSetValue(Js[1 + 2 * e], 1, 11, 1.0, INSERT_VALUES);
+		  MatAssemblyBegin(Js[1 + 2 * e], MAT_FINAL_ASSEMBLY);
+		  MatAssemblyEnd(Js[1 + 2 * e], MAT_FINAL_ASSEMBLY);
+
+		  MatCreateDense(PETSC_COMM_SELF, 2, 2, PETSC_DETERMINE, PETSC_DETERMINE, NULL, &Js[1 + 2 * e + 1]);
+		  MatSetValue(Js[1 + 2 * e + 1], 0, 0, 1.0, INSERT_VALUES);
+		  MatSetValue(Js[1 + 2 * e + 1], 0, 1, 1.0, INSERT_VALUES);
+		  MatSetValue(Js[1 + 2 * e + 1], 1, 0, 1.0, INSERT_VALUES);
+		  MatSetValue(Js[1 + 2 * e + 1], 1, 1, 1.0, INSERT_VALUES);
+
+		  MatAssemblyBegin(Js[1 + 2 * e + 1], MAT_FINAL_ASSEMBLY);
+		  MatAssemblyEnd(Js[1 + 2 * e + 1], MAT_FINAL_ASSEMBLY);
+	  }
+
+	  DMNetworkVertexSetMatrix(networkdm, v, Js);
+
+	  PetscFree(Js);
+  }
+
 
   ierr = TSSolve(ts,X);CHKERRQ(ierr);
 
@@ -740,11 +832,11 @@ int main(int argc,char ** argv)
   
   /* View solution q and h */
   /* --------------------- */
-  viewpipes = PETSC_FALSE;
-  ierr = PetscOptionsGetBool(NULL,NULL, "-pipe_view", &viewpipes,NULL);CHKERRQ(ierr);
-  if (viewpipes) {
-    ierr = PipesView(X,networkdm,wash);CHKERRQ(ierr);
-  }
+  //viewpipes = PETSC_FALSE;
+  //ierr = PetscOptionsGetBool(NULL,NULL, "-pipe_view", &viewpipes,NULL);CHKERRQ(ierr);
+  //if (viewpipes) {
+  //  ierr = PipesView(X,networkdm,wash);CHKERRQ(ierr);
+  //}
 
   /* Free spaces */
   /* ----------- */

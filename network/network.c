@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
 		DMNetworkAddComponent(networkdm, i, componentkeys[1], vertices_data[i - vStart]);
 		DMNetworkAddNumVariables(networkdm, i, 1);
 	}
-
+	
 	DMSetUp(networkdm);
 
 	if (rank == 0) {
