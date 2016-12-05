@@ -520,7 +520,7 @@ int main(int argc,char ** argv)
   ierr = DMNetworkGetEdgeRange(networkdm,&eStart,&eEnd);CHKERRQ(ierr);
   ierr = DMNetworkGetVertexRange(networkdm,&vStart,&vEnd);CHKERRQ(ierr);
   
-#if 0
+#if 1
   PetscInt numComponents;
   EDGEDATA edge;
   PetscInt offset,key,kk;

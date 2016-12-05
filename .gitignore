@@ -1,2 +1,4 @@
 network_examples/wash/build
 heat_transfer_network/build
+network_examples/pflow/build
+network_examples/wash/build

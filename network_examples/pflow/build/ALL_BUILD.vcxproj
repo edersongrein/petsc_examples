@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGUID>{A11C1157-872E-40A0-95A8-DF077499E083}</ProjectGUID>
+    <ProjectGUID>{5A17F63A-CF30-437D-9D95-CFEB3324EE11}</ProjectGUID>
     <Keyword>Win32Proj</Keyword>
     <Platform>x64</Platform>
     <ProjectName>ALL_BUILD</ProjectName>
@@ -163,10 +163,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="W:/petsc_examples/network_examples/pflow/build/ZERO_CHECK.vcxproj">
-      <Project>B5D0FC77-AD65-4D03-B317-6F62110765A7</Project>
+      <Project>FD8987A8-1E2A-4D96-98AF-47DA28741F89</Project>
     </ProjectReference>
     <ProjectReference Include="W:/petsc_examples/network_examples/pflow/build/pflow.vcxproj">
-      <Project>3808315D-9BBD-4351-A844-B0F4FAC4526C</Project>
+      <Project>4F48FEA4-FD82-457E-95FF-B051D984E0D3</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

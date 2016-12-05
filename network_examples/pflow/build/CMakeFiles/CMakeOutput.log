@@ -9,7 +9,7 @@ The output was:
 Microsoft (R) Build Engine version 14.0.25420.1
 Copyright (C) Microsoft Corporation. All rights reserved.
 
-Build started 01/12/2016 10:13:25.
+Build started 05/12/2016 10:29:05.
 Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\3.3.2\CompilerIdCXX\CompilerIdCXX.vcxproj" on node 1 (default targets).
 PrepareForBuild:
   Creating directory "Debug\".
@@ -35,7 +35,7 @@ Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:00.53
+Time Elapsed 00:00:01.11
 
 
 Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.exe"
@@ -54,7 +54,7 @@ The output was:
 Microsoft (R) Build Engine version 14.0.25420.1
 Copyright (C) Microsoft Corporation. All rights reserved.
 
-Build started 01/12/2016 10:13:26.
+Build started 05/12/2016 10:29:06.
 Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\3.3.2\CompilerIdC\CompilerIdC.vcxproj" on node 1 (default targets).
 PrepareForBuild:
   Creating directory "Debug\".
@@ -80,7 +80,7 @@ Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:00.50
+Time Elapsed 00:00:01.08
 
 
 Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CompilerIdC.exe"
@@ -92,79 +92,79 @@ The C compiler identification is MSVC, found in "W:/petsc_examples/network_examp
 Determining if the CXX compiler works passed with the following output:
 Change Dir: W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_c0439.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_d07e4.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
 Microsoft (R) Build Engine version 14.0.25420.1
 Copyright (C) Microsoft Corporation. All rights reserved.
 
-Build started 01/12/2016 10:13:27.
-Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_c0439.vcxproj" on node 1 (default targets).
+Build started 05/12/2016 10:29:08.
+Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_d07e4.vcxproj" on node 1 (default targets).
 PrepareForBuild:
-  Creating directory "cmTC_c0439.dir\Debug\".
+  Creating directory "cmTC_d07e4.dir\Debug\".
   Creating directory "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\".
-  Creating directory "cmTC_c0439.dir\Debug\cmTC_c0439.tlog\".
+  Creating directory "cmTC_d07e4.dir\Debug\cmTC_d07e4.tlog\".
 InitializeBuildStatus:
-  Creating "cmTC_c0439.dir\Debug\cmTC_c0439.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Creating "cmTC_d07e4.dir\Debug\cmTC_d07e4.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
 ClCompile:
-  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_c0439.dir\Debug\\" /Fd"cmTC_c0439.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\testCXXCompiler.cxx
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_d07e4.dir\Debug\\" /Fd"cmTC_d07e4.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\testCXXCompiler.cxx
   Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24215.1 for x64
   Copyright (C) Microsoft Corporation.  All rights reserved.
   
-  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_c0439.dir\Debug\\" /Fd"cmTC_c0439.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\testCXXCompiler.cxx
+  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_d07e4.dir\Debug\\" /Fd"cmTC_d07e4.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\testCXXCompiler.cxx
   
   testCXXCompiler.cxx
 Link:
-  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_c0439.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_c0439.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_c0439.lib" /MACHINE:X64  /machine:x64 /debug cmTC_c0439.dir\Debug\testCXXCompiler.obj
-  cmTC_c0439.vcxproj -> W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_c0439.exe
-  cmTC_c0439.vcxproj -> W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_c0439.pdb (Full PDB)
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_d07e4.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_d07e4.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_d07e4.lib" /MACHINE:X64  /machine:x64 /debug cmTC_d07e4.dir\Debug\testCXXCompiler.obj
+  cmTC_d07e4.vcxproj -> W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_d07e4.exe
+  cmTC_d07e4.vcxproj -> W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_d07e4.pdb (Full PDB)
 FinalizeBuildStatus:
-  Deleting file "cmTC_c0439.dir\Debug\cmTC_c0439.tlog\unsuccessfulbuild".
-  Touching "cmTC_c0439.dir\Debug\cmTC_c0439.tlog\cmTC_c0439.lastbuildstate".
-Done Building Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_c0439.vcxproj" (default targets).
+  Deleting file "cmTC_d07e4.dir\Debug\cmTC_d07e4.tlog\unsuccessfulbuild".
+  Touching "cmTC_d07e4.dir\Debug\cmTC_d07e4.tlog\cmTC_d07e4.lastbuildstate".
+Done Building Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_d07e4.vcxproj" (default targets).
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:00.58
+Time Elapsed 00:00:01.11
 
 
 Detecting CXX compiler ABI info compiled with the following output:
 Change Dir: W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_c02e3.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_c17db.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
 Microsoft (R) Build Engine version 14.0.25420.1
 Copyright (C) Microsoft Corporation. All rights reserved.
 
-Build started 01/12/2016 10:13:28.
-Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_c02e3.vcxproj" on node 1 (default targets).
+Build started 05/12/2016 10:29:09.
+Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_c17db.vcxproj" on node 1 (default targets).
 PrepareForBuild:
-  Creating directory "cmTC_c02e3.dir\Debug\".
+  Creating directory "cmTC_c17db.dir\Debug\".
   Creating directory "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\".
-  Creating directory "cmTC_c02e3.dir\Debug\cmTC_c02e3.tlog\".
+  Creating directory "cmTC_c17db.dir\Debug\cmTC_c17db.tlog\".
 InitializeBuildStatus:
-  Creating "cmTC_c02e3.dir\Debug\cmTC_c02e3.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Creating "cmTC_c17db.dir\Debug\cmTC_c17db.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
 ClCompile:
-  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_c02e3.dir\Debug\\" /Fd"cmTC_c02e3.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue "C:\Program Files (x86)\CMake\share\cmake-3.3\Modules\CMakeCXXCompilerABI.cpp"
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_c17db.dir\Debug\\" /Fd"cmTC_c17db.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue "C:\Program Files (x86)\CMake\share\cmake-3.3\Modules\CMakeCXXCompilerABI.cpp"
   Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24215.1 for x64
   Copyright (C) Microsoft Corporation.  All rights reserved.
   
-  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_c02e3.dir\Debug\\" /Fd"cmTC_c02e3.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue "C:\Program Files (x86)\CMake\share\cmake-3.3\Modules\CMakeCXXCompilerABI.cpp"
+  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_c17db.dir\Debug\\" /Fd"cmTC_c17db.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue "C:\Program Files (x86)\CMake\share\cmake-3.3\Modules\CMakeCXXCompilerABI.cpp"
   
   CMakeCXXCompilerABI.cpp
 Link:
-  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_c02e3.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_c02e3.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_c02e3.lib" /MACHINE:X64  /machine:x64 /debug cmTC_c02e3.dir\Debug\CMakeCXXCompilerABI.obj
-  cmTC_c02e3.vcxproj -> W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_c02e3.exe
-  cmTC_c02e3.vcxproj -> W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_c02e3.pdb (Full PDB)
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_c17db.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_c17db.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_c17db.lib" /MACHINE:X64  /machine:x64 /debug cmTC_c17db.dir\Debug\CMakeCXXCompilerABI.obj
+  cmTC_c17db.vcxproj -> W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_c17db.exe
+  cmTC_c17db.vcxproj -> W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_c17db.pdb (Full PDB)
 FinalizeBuildStatus:
-  Deleting file "cmTC_c02e3.dir\Debug\cmTC_c02e3.tlog\unsuccessfulbuild".
-  Touching "cmTC_c02e3.dir\Debug\cmTC_c02e3.tlog\cmTC_c02e3.lastbuildstate".
-Done Building Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_c02e3.vcxproj" (default targets).
+  Deleting file "cmTC_c17db.dir\Debug\cmTC_c17db.tlog\unsuccessfulbuild".
+  Touching "cmTC_c17db.dir\Debug\cmTC_c17db.tlog\cmTC_c17db.lastbuildstate".
+Done Building Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_c17db.vcxproj" (default targets).
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:00.58
+Time Elapsed 00:00:01.12
 
 
 
@@ -172,40 +172,40 @@ Time Elapsed 00:00:00.58
 Detecting CXX [] compiler features compiled with the following output:
 Change Dir: W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_e8a13.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_1c85e.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
 Microsoft (R) Build Engine version 14.0.25420.1
 Copyright (C) Microsoft Corporation. All rights reserved.
 
-Build started 01/12/2016 10:13:28.
-Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_e8a13.vcxproj" on node 1 (default targets).
+Build started 05/12/2016 10:29:11.
+Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_1c85e.vcxproj" on node 1 (default targets).
 PrepareForBuild:
-  Creating directory "cmTC_e8a13.dir\Debug\".
+  Creating directory "cmTC_1c85e.dir\Debug\".
   Creating directory "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\".
-  Creating directory "cmTC_e8a13.dir\Debug\cmTC_e8a13.tlog\".
+  Creating directory "cmTC_1c85e.dir\Debug\cmTC_1c85e.tlog\".
 InitializeBuildStatus:
-  Creating "cmTC_e8a13.dir\Debug\cmTC_e8a13.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Creating "cmTC_1c85e.dir\Debug\cmTC_1c85e.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
 ClCompile:
-  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_e8a13.dir\Debug\\" /Fd"cmTC_e8a13.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue W:\petsc_examples\network_examples\pflow\build\CMakeFiles\feature_tests.cxx
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_1c85e.dir\Debug\\" /Fd"cmTC_1c85e.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue W:\petsc_examples\network_examples\pflow\build\CMakeFiles\feature_tests.cxx
   Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24215.1 for x64
   Copyright (C) Microsoft Corporation.  All rights reserved.
   
-  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_e8a13.dir\Debug\\" /Fd"cmTC_e8a13.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue W:\petsc_examples\network_examples\pflow\build\CMakeFiles\feature_tests.cxx
+  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_1c85e.dir\Debug\\" /Fd"cmTC_1c85e.dir\Debug\vc140.pdb" /Gd /TP /errorReport:queue W:\petsc_examples\network_examples\pflow\build\CMakeFiles\feature_tests.cxx
   
   feature_tests.cxx
 Link:
-  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_e8a13.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_e8a13.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_e8a13.lib" /MACHINE:X64  /machine:x64 /debug cmTC_e8a13.dir\Debug\feature_tests.obj
-  cmTC_e8a13.vcxproj -> W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_e8a13.exe
-  cmTC_e8a13.vcxproj -> W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_e8a13.pdb (Full PDB)
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_1c85e.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_1c85e.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_1c85e.lib" /MACHINE:X64  /machine:x64 /debug cmTC_1c85e.dir\Debug\feature_tests.obj
+  cmTC_1c85e.vcxproj -> W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_1c85e.exe
+  cmTC_1c85e.vcxproj -> W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_1c85e.pdb (Full PDB)
 FinalizeBuildStatus:
-  Deleting file "cmTC_e8a13.dir\Debug\cmTC_e8a13.tlog\unsuccessfulbuild".
-  Touching "cmTC_e8a13.dir\Debug\cmTC_e8a13.tlog\cmTC_e8a13.lastbuildstate".
-Done Building Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_e8a13.vcxproj" (default targets).
+  Deleting file "cmTC_1c85e.dir\Debug\cmTC_1c85e.tlog\unsuccessfulbuild".
+  Touching "cmTC_1c85e.dir\Debug\cmTC_1c85e.tlog\cmTC_1c85e.lastbuildstate".
+Done Building Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_1c85e.vcxproj" (default targets).
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:00.56
+Time Elapsed 00:00:01.15
 
 
     Feature record: CXX_FEATURE:1cxx_alias_templates
@@ -264,78 +264,78 @@ Time Elapsed 00:00:00.56
 Determining if the C compiler works passed with the following output:
 Change Dir: W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_941a2.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_fbce1.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
 Microsoft (R) Build Engine version 14.0.25420.1
 Copyright (C) Microsoft Corporation. All rights reserved.
 
-Build started 01/12/2016 10:13:29.
-Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_941a2.vcxproj" on node 1 (default targets).
+Build started 05/12/2016 10:29:12.
+Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_fbce1.vcxproj" on node 1 (default targets).
 PrepareForBuild:
-  Creating directory "cmTC_941a2.dir\Debug\".
+  Creating directory "cmTC_fbce1.dir\Debug\".
   Creating directory "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\".
-  Creating directory "cmTC_941a2.dir\Debug\cmTC_941a2.tlog\".
+  Creating directory "cmTC_fbce1.dir\Debug\cmTC_fbce1.tlog\".
 InitializeBuildStatus:
-  Creating "cmTC_941a2.dir\Debug\cmTC_941a2.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Creating "cmTC_fbce1.dir\Debug\cmTC_fbce1.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
 ClCompile:
-  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_941a2.dir\Debug\\" /Fd"cmTC_941a2.dir\Debug\vc140.pdb" /Gd /TC /errorReport:queue W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\testCCompiler.c
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_fbce1.dir\Debug\\" /Fd"cmTC_fbce1.dir\Debug\vc140.pdb" /Gd /TC /errorReport:queue W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\testCCompiler.c
   Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24215.1 for x64
   Copyright (C) Microsoft Corporation.  All rights reserved.
   
-  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_941a2.dir\Debug\\" /Fd"cmTC_941a2.dir\Debug\vc140.pdb" /Gd /TC /errorReport:queue W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\testCCompiler.c
+  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_fbce1.dir\Debug\\" /Fd"cmTC_fbce1.dir\Debug\vc140.pdb" /Gd /TC /errorReport:queue W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\testCCompiler.c
   
   testCCompiler.c
 Link:
-  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_941a2.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_941a2.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_941a2.lib" /MACHINE:X64  /machine:x64 /debug cmTC_941a2.dir\Debug\testCCompiler.obj
-  cmTC_941a2.vcxproj -> W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_941a2.exe
-  cmTC_941a2.vcxproj -> W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_941a2.pdb (Full PDB)
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_fbce1.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_fbce1.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_fbce1.lib" /MACHINE:X64  /machine:x64 /debug cmTC_fbce1.dir\Debug\testCCompiler.obj
+  cmTC_fbce1.vcxproj -> W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_fbce1.exe
+  cmTC_fbce1.vcxproj -> W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_fbce1.pdb (Full PDB)
 FinalizeBuildStatus:
-  Deleting file "cmTC_941a2.dir\Debug\cmTC_941a2.tlog\unsuccessfulbuild".
-  Touching "cmTC_941a2.dir\Debug\cmTC_941a2.tlog\cmTC_941a2.lastbuildstate".
-Done Building Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_941a2.vcxproj" (default targets).
+  Deleting file "cmTC_fbce1.dir\Debug\cmTC_fbce1.tlog\unsuccessfulbuild".
+  Touching "cmTC_fbce1.dir\Debug\cmTC_fbce1.tlog\cmTC_fbce1.lastbuildstate".
+Done Building Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_fbce1.vcxproj" (default targets).
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:00.62
+Time Elapsed 00:00:01.05
 
 
 Detecting C compiler ABI info compiled with the following output:
 Change Dir: W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp
 
-Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_44a28.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
+Run Build Command:"C:/Program Files (x86)/MSBuild/14.0/bin/MSBuild.exe" "cmTC_06c3c.vcxproj" "/p:Configuration=Debug" "/p:VisualStudioVersion=14.0"
 Microsoft (R) Build Engine version 14.0.25420.1
 Copyright (C) Microsoft Corporation. All rights reserved.
 
-Build started 01/12/2016 10:13:30.
-Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_44a28.vcxproj" on node 1 (default targets).
+Build started 05/12/2016 10:29:13.
+Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_06c3c.vcxproj" on node 1 (default targets).
 PrepareForBuild:
-  Creating directory "cmTC_44a28.dir\Debug\".
+  Creating directory "cmTC_06c3c.dir\Debug\".
   Creating directory "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\".
-  Creating directory "cmTC_44a28.dir\Debug\cmTC_44a28.tlog\".
+  Creating directory "cmTC_06c3c.dir\Debug\cmTC_06c3c.tlog\".
 InitializeBuildStatus:
-  Creating "cmTC_44a28.dir\Debug\cmTC_44a28.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Creating "cmTC_06c3c.dir\Debug\cmTC_06c3c.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
 ClCompile:
-  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_44a28.dir\Debug\\" /Fd"cmTC_44a28.dir\Debug\vc140.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\CMake\share\cmake-3.3\Modules\CMakeCCompilerABI.c"
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_06c3c.dir\Debug\\" /Fd"cmTC_06c3c.dir\Debug\vc140.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\CMake\share\cmake-3.3\Modules\CMakeCCompilerABI.c"
   Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24215.1 for x64
   Copyright (C) Microsoft Corporation.  All rights reserved.
   
-  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_44a28.dir\Debug\\" /Fd"cmTC_44a28.dir\Debug\vc140.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\CMake\share\cmake-3.3\Modules\CMakeCCompilerABI.c"
+  cl /c /Zi /W3 /WX- /Od /Ob0 /D WIN32 /D _WINDOWS /D _DEBUG /D "CMAKE_INTDIR=\"Debug\"" /D _MBCS /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_06c3c.dir\Debug\\" /Fd"cmTC_06c3c.dir\Debug\vc140.pdb" /Gd /TC /errorReport:queue "C:\Program Files (x86)\CMake\share\cmake-3.3\Modules\CMakeCCompilerABI.c"
   
   CMakeCCompilerABI.c
 Link:
-  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_44a28.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_44a28.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_44a28.lib" /MACHINE:X64  /machine:x64 /debug cmTC_44a28.dir\Debug\CMakeCCompilerABI.obj
-  cmTC_44a28.vcxproj -> W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_44a28.exe
-  cmTC_44a28.vcxproj -> W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_44a28.pdb (Full PDB)
+  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_06c3c.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_06c3c.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_06c3c.lib" /MACHINE:X64  /machine:x64 /debug cmTC_06c3c.dir\Debug\CMakeCCompilerABI.obj
+  cmTC_06c3c.vcxproj -> W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\Debug\cmTC_06c3c.exe
+  cmTC_06c3c.vcxproj -> W:/petsc_examples/network_examples/pflow/build/CMakeFiles/CMakeTmp/Debug/cmTC_06c3c.pdb (Full PDB)
 FinalizeBuildStatus:
-  Deleting file "cmTC_44a28.dir\Debug\cmTC_44a28.tlog\unsuccessfulbuild".
-  Touching "cmTC_44a28.dir\Debug\cmTC_44a28.tlog\cmTC_44a28.lastbuildstate".
-Done Building Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_44a28.vcxproj" (default targets).
+  Deleting file "cmTC_06c3c.dir\Debug\cmTC_06c3c.tlog\unsuccessfulbuild".
+  Touching "cmTC_06c3c.dir\Debug\cmTC_06c3c.tlog\cmTC_06c3c.lastbuildstate".
+Done Building Project "W:\petsc_examples\network_examples\pflow\build\CMakeFiles\CMakeTmp\cmTC_06c3c.vcxproj" (default targets).
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:00.55
+Time Elapsed 00:00:01.09
 
 
